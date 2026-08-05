@@ -1,1 +1,1275 @@
-S
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>log</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --bg:        #0c0a12;
+    --card:      #15111e;
+    --card-hi:   #1c1628;
+    --rose:      #d1717c;
+    --lavender:  #9a80e0;
+    --sage:      #45a68d;
+    --gold:      #dba63e;
+    --ink:       #e6dfda;
+    --ink-dim:   #8a7f96;
+    --hairline:  #241c33;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* ---------- grain overlay ---------- */
+  .grain{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:50;
+    opacity:0.07;
+    mix-blend-mode:overlay;
+  }
+
+  /* ---------- flat paper-toned background ---------- */
+  .wash{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background:var(--bg);
+  }
+
+  /* ---------- home / spiral button ---------- */
+  .spiral-home{
+    position:absolute;
+    top:26px;
+    right:30px;
+    z-index:6;
+    width:46px;
+    height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    border:none;
+    background:none;
+    padding:0;
+  }
+  .spiral-home svg{
+    width:100%;
+    height:100%;
+    animation:spin 14s linear infinite;
+    filter:drop-shadow(0 0 5px rgba(204,109,120,0.4));
+    transition:filter 0.4s ease;
+  }
+  .spiral-home:hover svg{
+    filter:drop-shadow(0 0 10px rgba(204,109,120,0.65));
+  }
+  @keyframes spin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .spiral-home svg{ animation:none; }
+  }
+
+  /* ---------- layout ---------- */
+  header.top{
+    position:relative;
+    z-index:5;
+    height:110px;
+  }
+
+  main{
+    position:relative;
+    z-index:5;
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 28px 120px;
+  }
+
+  .feed{
+    column-count:3;
+    column-gap:22px;
+  }
+  @media (max-width:980px){ .feed{ column-count:2; } }
+  @media (max-width:620px){ .feed{ column-count:1; } }
+
+  .card{
+    break-inside:avoid;
+    margin-bottom:22px;
+    border-radius:3px;
+    overflow:hidden;
+    border:1px solid var(--hairline);
+    background:var(--card);
+    opacity:0;
+    transform:translateY(10px);
+    animation:rise 0.7s ease forwards;
+  }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+
+  .card.text,
+  .card.grouped{
+    transition:border-color 0.3s ease, background 0.3s ease;
+  }
+  .card.text:hover,
+  .card.grouped:hover{
+    border-color:var(--rose);
+    background:var(--card-hi);
+  }
+
+  .grouped-images{
+    display:grid;
+    gap:2px;
+    line-height:0;
+  }
+  .img-tile{ position:relative; line-height:0; }
+  .img-tile img,
+  .img-tile .ph{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .entry-body{
+    padding:18px 24px 22px;
+  }
+
+  .entry-date{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:block;
+    margin-bottom:8px;
+  }
+  .entry-time{
+    font-family:'Space Mono', monospace;
+    font-size:9px;
+    letter-spacing:0.05em;
+    color:var(--ink-dim);
+    opacity:0.75;
+    margin-left:7px;
+    text-transform:lowercase;
+  }
+
+  .entry-title{
+    font-family:'Cormorant Garamond', serif;
+    font-style:normal;
+    font-weight:600;
+    font-size:25px;
+    letter-spacing:0.01em;
+    color:var(--ink);
+    margin:0 0 12px;
+    line-height:1.25;
+  }
+
+  .entry-text{
+    font-size:14px;
+    line-height:1.65;
+    color:var(--ink-dim);
+    margin:0;
+  }
+
+  .ph{
+    aspect-ratio: var(--ar, 4/5);
+    background:
+      linear-gradient(160deg, var(--c1), var(--c2));
+    position:relative;
+  }
+  .ph::after{
+    content:attr(data-label);
+    position:absolute;
+    left:12px;
+    bottom:12px;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.06em;
+    color:rgba(233,227,218,0.55);
+    text-transform:uppercase;
+  }
+  .img-tile{ transition:filter 0.35s ease; filter:saturate(0.9); }
+  .img-tile:hover{ filter:saturate(1.15); }
+
+  footer{
+    position:relative;
+    z-index:5;
+    text-align:center;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--ink-dim);
+    padding:40px 0 60px;
+    text-transform:uppercase;
+    opacity:0.6;
+  }
+
+  /* ---------- owner-only edit system ---------- */
+  .owner-toggle{
+    position:fixed;
+    bottom:22px;
+    right:22px;
+    z-index:70;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    border:1px solid var(--hairline);
+    background:var(--card-hi);
+    color:var(--ink-dim);
+    font-size:14px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0.5;
+    transition:opacity 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  }
+  .owner-toggle:hover{ opacity:1; border-color:var(--rose); color:var(--rose); }
+  .owner-toggle.unlocked{ opacity:1; border-color:var(--sage); color:var(--sage); }
+
+  .modal-overlay{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(8,6,12,0.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .modal{
+    background:var(--card-hi);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+    padding:26px;
+    width:100%;
+    max-width:340px;
+  }
+  .modal h3{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:15px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .modal p.note{
+    font-size:12px;
+    color:var(--ink-dim);
+    line-height:1.5;
+    margin:0 0 14px;
+  }
+  .modal input{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size:13px;
+    background:var(--bg);
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    padding:9px 10px;
+    color:var(--ink);
+    margin-bottom:10px;
+  }
+  .modal .row{ display:flex; gap:8px; justify-content:flex-end; }
+  .modal button{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    border:1px solid var(--hairline);
+    background:none;
+    color:var(--ink);
+    padding:9px 14px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:border-color 0.2s ease, color 0.2s ease;
+  }
+  .modal button.primary{ border-color:var(--sage); color:var(--sage); }
+  .modal button:hover{ border-color:var(--rose); color:var(--rose); }
+  .modal .err{ color:var(--rose); font-size:12px; min-height:14px; margin:-4px 0 8px; }
+
+  .edit-panel{
+    position:fixed;
+    bottom:70px;
+    right:22px;
+    z-index:70;
+    width:270px;
+    max-height:65vh;
+    overflow-y:auto;
+    background:var(--card-hi);
+    border:1px solid var(--hairline);
+    border-radius:6px;
+    padding:16px;
+    display:none;
+  }
+  .edit-panel.open{ display:block; }
+  .edit-panel h4{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0 0 10px;
+  }
+  .edit-panel input, .edit-panel textarea{
+    width:100%;
+    font-family:'Inter', sans-serif;
+    font-size:12px;
+    background:var(--bg);
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    padding:7px 8px;
+    color:var(--ink);
+    margin-bottom:7px;
+  }
+  .edit-panel textarea{ min-height:56px; resize:vertical; }
+  .edit-panel .file-label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin-bottom:5px;
+  }
+  .edit-panel input[type="file"],
+  .modal input[type="file"]{
+    width:100%;
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-bottom:10px;
+  }
+  .color-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .color-row input[type="color"]{
+    width:34px;
+    height:28px;
+    padding:0;
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    background:none;
+    cursor:pointer;
+  }
+  .color-row span{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ink-dim);
+  }
+  .color-row button{
+    margin-left:auto;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    background:none;
+    border:none;
+    color:var(--ink-dim);
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .color-row button:hover{ color:var(--rose); }
+  .edit-panel button.add-btn,
+  .edit-panel button.export-btn,
+  .edit-panel button.reset-btn{
+    width:100%;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    background:none;
+    border:1px dashed var(--hairline);
+    border-radius:3px;
+    padding:8px;
+    color:var(--ink-dim);
+    cursor:pointer;
+    margin-bottom:8px;
+  }
+  .edit-panel button.add-btn:hover{ border-color:var(--sage); color:var(--sage); }
+  .edit-panel button.export-btn{ border-style:solid; }
+  .edit-panel button.export-btn:hover{ border-color:var(--gold); color:var(--gold); }
+  .edit-panel button.reset-btn:hover{ border-color:var(--rose); color:var(--rose); }
+  .edit-panel .hint{
+    font-size:11px;
+    line-height:1.5;
+    color:var(--ink-dim);
+    margin:0 0 12px;
+  }
+
+  .card-controls{
+    display:none;
+    gap:10px;
+    padding:8px 24px 14px;
+    border-top:1px solid var(--hairline);
+    margin-top:2px;
+    flex-wrap:wrap;
+  }
+  body.owner-mode .card.text .card-controls,
+  body.owner-mode .card.grouped .card-controls{ display:flex; }
+  .card-controls button{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    background:none;
+    border:none;
+    color:var(--ink-dim);
+    cursor:pointer;
+    padding:0;
+  }
+  .card-controls button:hover{ color:var(--rose); }
+
+  body.owner-mode .entry-title,
+  body.owner-mode .entry-text{
+    outline:1px dashed transparent;
+    border-radius:2px;
+    transition:outline-color 0.2s ease;
+    cursor:text;
+  }
+  body.owner-mode .entry-title:hover,
+  body.owner-mode .entry-text:hover{ outline-color:var(--hairline); }
+  body.owner-mode .entry-title:focus,
+  body.owner-mode .entry-text:focus{ outline-color:var(--sage); }
+  body.owner-mode .entry-title:empty::before,
+  body.owner-mode .entry-text:empty::before{
+    content:attr(data-placeholder);
+    color:var(--ink-dim);
+    opacity:0.55;
+    font-style:normal;
+  }
+  body.owner-mode .entry-title:empty,
+  body.owner-mode .entry-text:empty{
+    display:block;
+    min-height:1.3em;
+  }
+
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .panel-head h4{ margin:0; }
+  .panel-arrow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:22px; height:22px;
+    border-radius:50%;
+    background:none;
+    border:none;
+    color:var(--ink-dim);
+    cursor:pointer;
+    transition:color 0.2s ease;
+  }
+  .panel-arrow:hover{ color:var(--rose); }
+
+  /* stylized close/remove buttons, matching the spiral's linework */
+  .x-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:rgba(3,2,6,0.55);
+    border:none;
+    color:var(--rose);
+    cursor:pointer;
+    padding:0;
+    transition:color 0.25s ease, filter 0.25s ease;
+  }
+  .x-btn:hover{
+    color:var(--gold);
+    filter:drop-shadow(0 0 5px rgba(209,113,124,0.55));
+  }
+
+  .img-del{
+    position:absolute; top:8px; right:8px;
+    width:24px; height:24px;
+    display:none;
+  }
+  body.owner-mode .img-tile:hover .img-del{ display:flex; }
+
+  /* ---------- video tiles ---------- */
+  .video-tile{ cursor:pointer; }
+  .tile-video{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .play-btn{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:42px; height:42px;
+    display:none;
+  }
+  .video-tile.selected .play-btn{ display:flex; }
+  .video-tile.selected .play-btn:hover{ transform:translate(-50%,-50%); }
+
+  .vol-btn{
+    position:absolute; top:8px; left:8px;
+    width:24px; height:24px;
+    display:none;
+    opacity:0.85;
+  }
+  .video-tile.playing .vol-btn{ display:flex; }
+  .video-tile.playing:hover .vol-btn{ opacity:1; }
+
+  /* ---------- pending media (new-entry staging) ---------- */
+  .pending-media{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:8px;
+  }
+  .pending-thumb{
+    position:relative;
+    width:46px; height:46px;
+    border-radius:3px;
+    overflow:hidden;
+    border:1px solid var(--hairline);
+    line-height:0;
+  }
+  .pending-thumb img,
+  .pending-thumb video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .pending-thumb .x-btn{
+    position:absolute; top:2px; right:2px;
+    width:16px; height:16px;
+    background:rgba(3,2,6,0.7);
+  }
+
+  /* ---------- click-to-expand ---------- */
+  body:not(.owner-mode) .card{ cursor:pointer; }
+
+  .expand-overlay{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    background:rgba(3,2,6,0.88);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:40px 20px;
+    opacity:0;
+    transition:opacity 0.3s ease;
+  }
+  .expand-overlay.open{ display:flex; opacity:1; }
+
+  .expand-card{
+    position:relative;
+    max-width:640px;
+    width:100%;
+    overflow:hidden;
+    background:var(--card-hi);
+    border:1px solid var(--hairline);
+    border-radius:5px;
+    transform-origin:center center;
+  }
+
+  .expand-close{
+    position:absolute;
+    top:14px; right:14px;
+    z-index:2;
+    width:32px; height:32px;
+  }
+
+  .expand-images{ gap:2px; }
+  .expand-body{ padding:26px 30px 30px; }
+  .expand-body .entry-title{ font-size:32px; margin-bottom:16px; }
+  .expand-body .entry-text{ font-size:15.5px; line-height:1.75; color:var(--ink); }
+</style>
+</head>
+<body>
+
+<div class="wash"></div>
+<svg class="grain" xmlns="http://www.w3.org/2000/svg">
+  <filter id="noise">
+    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix in="noise" type="matrix"
+      values="0 0 0 0 0.62  0 0 0 0 0.52  0 0 0 0 0.78  0 0 0 0.7 0"/>
+  </filter>
+  <rect width="100%" height="100%" filter="url(#noise)"/>
+</svg>
+
+<header class="top">
+  <button class="spiral-home" id="homeBtn" aria-label="Home" title="Home">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path id="spiralPath" fill="none" stroke="#cc6d78" stroke-width="2.1"
+            stroke-linecap="round"/>
+    </svg>
+  </button>
+</header>
+
+<main>
+  <div class="feed" id="feed"></div>
+</main>
+
+<footer>est. mmxxvi</footer>
+
+<button class="owner-toggle" id="ownerToggle" title="Owner edit mode">✎</button>
+
+<div class="edit-panel" id="editPanel">
+  <div class="panel-head">
+    <h4>new entry</h4>
+    <button class="panel-arrow" id="panelArrow" title="tuck away">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <input type="text" id="newTitle" placeholder="title (optional)">
+  <textarea id="newText" placeholder="text (optional)"></textarea>
+  <label class="file-label">photos & videos (optional)</label>
+  <div class="pending-media" id="pendingMedia"></div>
+  <button type="button" class="add-btn" id="addMediaBtn">+ add photos / videos</button>
+  <input type="file" id="mediaPicker" accept="image/*,video/*" multiple style="display:none;">
+  <label class="file-label">card color (optional)</label>
+  <div class="color-row">
+    <input type="color" id="newColor" value="#15111e">
+    <span id="colorHex">#15111e</span>
+    <button type="button" id="colorReset" title="reset to default">reset</button>
+  </div>
+  <button class="add-btn" id="addEntryBtn">+ publish entry</button>
+  <div class="hint" id="publishHint">connect a GitHub repo once, then hit "publish live" to push changes straight to your site — no copying, no re-uploading.</div>
+  <button class="export-btn" id="publishLiveBtn">publish live</button>
+  <button class="reset-btn" id="ghSettingsBtn">github settings</button>
+  <div class="hint">or do it by hand: copy the JSON, paste it over the <code>posts</code> array in the file, re-upload.</div>
+  <button class="export-btn" id="exportBtn">copy posts as JSON</button>
+  <button class="reset-btn" id="resetBtn">reset local drafts</button>
+  <button class="reset-btn" id="lockBtn">exit edit mode</button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<div class="expand-overlay" id="expandOverlay" onclick="if(event.target===this) closeExpand()"></div>
+
+<script>
+/* ============================================================
+   DEFAULT POSTS
+   This is the array that ships live to every visitor. Either publish
+   via the button in the edit panel (if you've set up GitHub Pages),
+   or copy the JSON and paste it over this array by hand and re-upload.
+   Keep the START/END markers intact — the publish button uses them
+   to find and replace this block.
+============================================================ */
+/* DEFAULT_POSTS_START */
+const defaultPosts = [
+  {
+    date: "05.03.2026",
+    title: "bent mv",
+    text: "shoot day over — spent half of it in the water doing the same take on repeat. clothes still smell like campfire smoke.",
+    images: [
+      { label: "field kit", c1:"#8d7fa8", c2:"#3f3a52", ar:"4/5" },
+      { label: "on the rig", c1:"#5f8a80", c2:"#2c3c37", ar:"16/10" }
+    ]
+  },
+  {
+    date: "02.19.2026",
+    title: "back to the desk",
+    text: "reworked the bridge for the third time. sometimes the slow version is the one that sticks.",
+    images: [
+      { label: "studio corner", c1:"#b98a92", c2:"#4a3236", ar:"3/4" }
+    ]
+  },
+  {
+    date: "11.11.2024",
+    title: "bye ny",
+    text: "moving home for who knows how long. hoping less noise makes the finish line easier to see — still feels like it needs more songs.",
+    images: [
+      { label: "desk setup", c1:"#b99a63", c2:"#463a24", ar:"4/5" },
+      { label: "night session", c1:"#8d7fa8", c2:"#231f30", ar:"4/3" }
+    ]
+  }
+];
+/* DEFAULT_POSTS_END */
+
+/* ============================================================
+   WHY IT WORKS THIS WAY
+   This is a static file with no server, so there's no database
+   that visitors' browsers share. Anything typed into the edit
+   panel is saved to *your own browser's* local storage only —
+   it never touches anyone else's copy of the page, edited or not.
+   The passcode lock isn't bank-grade security; it's there so a
+   passerby on your laptop can't casually poke the edit tools.
+   The only way to change what every visitor sees is to edit the
+   `defaultPosts` array in this file's source and re-publish it —
+   which is also, not coincidentally, the most secure way to do
+   it, since it requires access to your actual files, not just a
+   password typed into a browser.
+============================================================ */
+
+let posts = loadPosts();
+let ownerMode = false;
+
+function loadPosts(){
+  const saved = localStorage.getItem('siteDrafts');
+  return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPosts));
+}
+function saveDrafts(){
+  try{
+    localStorage.setItem('siteDrafts', JSON.stringify(posts));
+  } catch(e){
+    showModal(`
+      <h3>storage full</h3>
+      <p class="note">your browser's local storage is full, likely from image files. try removing a photo, or export what you have and publish it, then start a fresh draft.</p>
+      <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
+    `);
+  }
+}
+function readFileAsDataURL(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function xIconSVG(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 5 Q12 12 19 19" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M19 5 Q12 12 5 19" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+function volIconSVG(muted, size){
+  const speaker = `<path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>`;
+  const waves = muted
+    ? `<line x1="15" y1="9" x2="21" y2="15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+       <line x1="21" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>`
+    : `<path d="M16 8a5 5 0 010 8" stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">${speaker}${waves}</svg>`;
+}
+function playIconSVG(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 6.5 L18 12 L9 17.5 Z" fill="currentColor"/>
+  </svg>`;
+}
+
+function renderMediaTile(item, postIdx, itemIdx){
+  const delBtn = `<button class="img-del x-btn" onclick="event.stopPropagation(); deleteImage(${postIdx},${itemIdx})" title="remove">${xIconSVG(12)}</button>`;
+  if (item.type === 'video'){
+    return `
+      <div class="img-tile video-tile" data-post="${postIdx}" data-img="${itemIdx}"
+           onclick="event.stopPropagation(); selectVideoTile(this)">
+        <video class="tile-video" src="${item.src}" muted playsinline preload="metadata"></video>
+        <button class="play-btn x-btn" onclick="event.stopPropagation(); playVideoTile(this.closest('.video-tile'))" title="play">${playIconSVG(18)}</button>
+        <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
+        ${delBtn}
+      </div>`;
+  }
+  const body = item.src
+    ? `<img src="${item.src}" alt="${item.label || ''}" onload="fitExpandCard()">`
+    : `<div class="ph" data-label="${item.label || ''}"
+         style="--c1:${item.c1 || '#8d7fa8'};--c2:${item.c2 || '#3f3a52'};--ar:${item.ar || '4/5'}"></div>`;
+  return `
+    <div class="img-tile" data-post="${postIdx}" data-img="${itemIdx}">
+      ${body}
+      ${delBtn}
+    </div>`;
+}
+
+/* gif-style choppy preview: periodically jump the paused, muted video
+   forward instead of playing it normally — no audio, no real playback,
+   until the person actually selects then plays it. */
+setInterval(() => {
+  document.querySelectorAll('.video-tile:not(.selected):not(.playing) video').forEach(v => {
+    if (!v.duration || isNaN(v.duration)) return;
+    let t = (v.currentTime || 0) + 0.4;
+    if (t >= v.duration) t = 0;
+    v.currentTime = t;
+  });
+}, 220);
+
+function selectVideoTile(tile){
+  if (tile.classList.contains('selected') || tile.classList.contains('playing')) return;
+  tile.classList.add('selected');
+  fitExpandCard();
+}
+function playVideoTile(tile){
+  tile.classList.remove('selected');
+  tile.classList.add('playing');
+  const video = tile.querySelector('video');
+  video.muted = false;
+  video.currentTime = 0;
+  video.play();
+}
+function toggleVolumeBtn(btn){
+  const video = btn.closest('.video-tile').querySelector('video');
+  video.muted = !video.muted;
+  if (!video.muted) video.play();
+  btn.innerHTML = volIconSVG(video.muted, 12);
+}
+
+function openExpand(pIdx){
+  const post = posts[pIdx];
+  const images = post.images || [];
+  const cols = images.length >= 2 ? 2 : 1;
+  const mediaHtml = images.map((img, iIdx) => renderMediaTile(img, pIdx, iIdx)).join('');
+  document.getElementById('expandOverlay').innerHTML = `
+    <div class="expand-card" style="${post.color ? `background:${post.color};` : ''}" onclick="event.stopPropagation()">
+      <button class="expand-close x-btn" onclick="closeExpand()" title="close">${xIconSVG(16)}</button>
+      ${images.length ? `
+        <div class="grouped-images expand-images" style="grid-template-columns:repeat(${cols}, 1fr);">
+          ${mediaHtml}
+        </div>` : ''}
+      ${(post.title || post.text) ? `
+        <div class="entry-body expand-body">
+          <span class="entry-date">${post.date}${post.time ? `<span class="entry-time">${post.time}</span>` : ''}</span>
+          ${post.title ? `<h2 class="entry-title">${post.title}</h2>` : ''}
+          ${post.text ? `<p class="entry-text">${post.text}</p>` : ''}
+        </div>` : ''}
+    </div>`;
+  document.getElementById('expandOverlay').classList.add('open');
+  requestAnimationFrame(fitExpandCard);
+}
+function closeExpand(){
+  document.getElementById('expandOverlay').classList.remove('open');
+}
+
+/* shrink the expanded card to fit the viewport instead of scrolling,
+   no matter how large the source image/video is */
+function fitExpandCard(){
+  const card = document.querySelector('#expandOverlay .expand-card');
+  if (!card || !document.getElementById('expandOverlay').classList.contains('open')) return;
+  card.style.transform = 'none';
+  const rect = card.getBoundingClientRect();
+  const maxH = window.innerHeight - 80;
+  const maxW = Math.min(window.innerWidth - 40, 640);
+  const scale = Math.min(1, maxH / rect.height, maxW / rect.width);
+  card.style.transform = scale < 0.999 ? `scale(${scale})` : 'none';
+}
+window.addEventListener('resize', fitExpandCard);
+
+function render(){
+  const feed = document.getElementById('feed');
+  let html = '';
+  let delay = 0;
+  posts.forEach((post, pIdx) => {
+    const images = post.images || [];
+    const hasImages = images.length > 0;
+    const cols = images.length >= 2 ? 2 : 1;
+    const showTitle = ownerMode || post.title;
+    const showText = ownerMode || post.text;
+    html += `
+      <article class="card ${hasImages ? 'grouped' : 'text'}"
+               style="animation-delay:${delay}s;${post.color ? `background:${post.color};` : ''}"
+               ${ownerMode ? '' : `onclick="openExpand(${pIdx})"`}>
+        ${hasImages ? `
+          <div class="grouped-images" style="grid-template-columns:repeat(${cols}, 1fr);">
+            ${images.map((img, iIdx) => renderMediaTile(img, pIdx, iIdx)).join('')}
+          </div>` : ''}
+        ${(showTitle || showText || !hasImages) ? `
+        <div class="entry-body">
+          <span class="entry-date">${post.date}${post.time ? `<span class="entry-time">${post.time}</span>` : ''}</span>
+          ${showTitle ? `<h2 class="entry-title" contenteditable="${ownerMode}" data-placeholder="title..."
+              onblur="updateField(${pIdx},'title',this.innerText)">${post.title || ''}</h2>` : ''}
+          ${showText ? `<p class="entry-text" contenteditable="${ownerMode}" data-placeholder="text..."
+             onblur="updateField(${pIdx},'text',this.innerText)">${post.text || ''}</p>` : ''}
+          <div class="card-controls">
+            <button onclick="addImageToPost(${pIdx})">+ media</button>
+            <button onclick="editEntryColor(${pIdx})">color</button>
+            <button onclick="deleteEntry(${pIdx})">delete entry</button>
+          </div>
+        </div>` : ''}
+      </article>`;
+    delay += 0.05;
+  });
+  feed.innerHTML = html;
+}
+render();
+
+function updateField(pIdx, field, value){
+  posts[pIdx][field] = value;
+  saveDrafts();
+}
+function editEntryColor(pIdx){
+  const current = posts[pIdx].color || '#15111e';
+  showModal(`
+    <h3>card color</h3>
+    <input type="color" id="editColorInput" value="${current}">
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="editColorYes">save</button>
+    </div>
+  `);
+  document.getElementById('editColorYes').onclick = () => {
+    posts[pIdx].color = document.getElementById('editColorInput').value;
+    hideModal();
+    saveDrafts();
+    render();
+  };
+}
+function deleteEntry(pIdx){
+  showModal(`
+    <h3>delete entry?</h3>
+    <p class="note">"${(posts[pIdx].title || '(untitled)').replace(/"/g,'&quot;')}" will be removed from your local draft.</p>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="delYes">delete</button>
+    </div>
+  `);
+  document.getElementById('delYes').onclick = () => {
+    hideModal();
+    posts.splice(pIdx, 1);
+    saveDrafts();
+    render();
+  };
+}
+function addImageToPost(pIdx){
+  showModal(`
+    <h3>add media</h3>
+    <input type="file" id="imgFile" accept="image/*,video/*" multiple>
+    <input type="text" id="imgLabel" placeholder="caption (optional, applies to all)">
+    <div class="err" id="imgErr"></div>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="imgAddYes">add</button>
+    </div>
+  `);
+  document.getElementById('imgAddYes').onclick = async () => {
+    const files = Array.from(document.getElementById('imgFile').files);
+    const label = document.getElementById('imgLabel').value.trim();
+    if (!files.length){
+      document.getElementById('imgErr').textContent = 'choose at least one file.';
+      return;
+    }
+    hideModal();
+    posts[pIdx].images = posts[pIdx].images || [];
+    for (const f of files){
+      const src = await readFileAsDataURL(f);
+      posts[pIdx].images.push({ type: f.type.startsWith('video/') ? 'video' : 'image', src, label });
+    }
+    saveDrafts();
+    render();
+  };
+}
+function deleteImage(pIdx, iIdx){
+  posts[pIdx].images.splice(iIdx, 1);
+  saveDrafts();
+  render();
+}
+
+/* ---------- pending media staging for the new-entry form ---------- */
+let pendingMedia = [];
+
+document.getElementById('addMediaBtn').addEventListener('click', () => {
+  document.getElementById('mediaPicker').click();
+});
+document.getElementById('mediaPicker').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  for (const f of files){
+    const src = await readFileAsDataURL(f);
+    pendingMedia.push({ type: f.type.startsWith('video/') ? 'video' : 'image', src });
+  }
+  e.target.value = '';
+  renderPendingMedia();
+});
+function renderPendingMedia(){
+  document.getElementById('pendingMedia').innerHTML = pendingMedia.map((m, i) => `
+    <div class="pending-thumb">
+      ${m.type === 'video' ? `<video src="${m.src}" muted></video>` : `<img src="${m.src}">`}
+      <button class="x-btn" onclick="removePendingMedia(${i})">${xIconSVG(10)}</button>
+    </div>`).join('');
+}
+function removePendingMedia(i){
+  pendingMedia.splice(i, 1);
+  renderPendingMedia();
+}
+
+document.getElementById('addEntryBtn').addEventListener('click', () => {
+  const title = document.getElementById('newTitle').value.trim();
+  const text = document.getElementById('newText').value.trim();
+  const color = document.getElementById('newColor').value;
+  if (!title && !text && !pendingMedia.length){
+    showModal(`<h3>hold on</h3><p class="note">add a title, some text, or at least one photo/video first.</p><div class="row"><button class="primary" onclick="hideModal()">ok</button></div>`);
+    return;
+  }
+  const now = new Date();
+  const date = now.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit', year:'numeric' }).replace(/\//g,'.');
+  const time = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }).toLowerCase();
+  posts.unshift({ date, time, title, text, images: pendingMedia, color });
+  saveDrafts();
+  render();
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newText').value = '';
+  pendingMedia = [];
+  renderPendingMedia();
+  document.getElementById('newColor').value = '#15111e';
+  document.getElementById('colorHex').textContent = '#15111e';
+});
+
+document.getElementById('newColor').addEventListener('input', (e) => {
+  document.getElementById('colorHex').textContent = e.target.value;
+});
+document.getElementById('colorReset').addEventListener('click', () => {
+  document.getElementById('newColor').value = '#15111e';
+  document.getElementById('colorHex').textContent = '#15111e';
+});
+
+/* ---------- publish straight to GitHub Pages ---------- */
+function utf8ToB64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64ToUtf8(str){
+  return decodeURIComponent(escape(atob(str)));
+}
+function getGhConfig(){
+  const raw = localStorage.getItem('ghConfig');
+  return raw ? JSON.parse(raw) : null;
+}
+function saveGhConfig(cfg){
+  localStorage.setItem('ghConfig', JSON.stringify(cfg));
+}
+
+function openGhSettings(){
+  const cfg = getGhConfig() || { owner:'', repo:'', path:'index.html', branch:'main', token:'' };
+  showModal(`
+    <h3>github settings</h3>
+    <p class="note">from the repo you created: your username, the repo name, the file path (usually index.html), and a fine-grained token scoped to just that repo with contents read/write.</p>
+    <input type="text" id="ghOwner" placeholder="github username" value="${cfg.owner}">
+    <input type="text" id="ghRepo" placeholder="repo name" value="${cfg.repo}">
+    <input type="text" id="ghPath" placeholder="file path" value="${cfg.path}">
+    <input type="text" id="ghBranch" placeholder="branch" value="${cfg.branch}">
+    <input type="password" id="ghToken" placeholder="personal access token" value="${cfg.token}">
+    <div class="err" id="ghErr"></div>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="ghSaveYes">save</button>
+    </div>
+  `);
+  document.getElementById('ghSaveYes').onclick = () => {
+    const owner = document.getElementById('ghOwner').value.trim();
+    const repo = document.getElementById('ghRepo').value.trim();
+    const path = document.getElementById('ghPath').value.trim() || 'index.html';
+    const branch = document.getElementById('ghBranch').value.trim() || 'main';
+    const token = document.getElementById('ghToken').value.trim();
+    if (!owner || !repo || !token){
+      document.getElementById('ghErr').textContent = 'username, repo, and token are required.';
+      return;
+    }
+    saveGhConfig({ owner, repo, path, branch, token });
+    hideModal();
+  };
+}
+document.getElementById('ghSettingsBtn').addEventListener('click', openGhSettings);
+
+async function publishLive(){
+  const cfg = getGhConfig();
+  if (!cfg){ openGhSettings(); return; }
+  const btn = document.getElementById('publishLiveBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'publishing…';
+  btn.disabled = true;
+  try{
+    const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`;
+    const getRes = await fetch(apiUrl, {
+      headers:{ 'Authorization': `Bearer ${cfg.token}`, 'Accept':'application/vnd.github+json' }
+    });
+    if (!getRes.ok) throw new Error(`couldn't read the file (${getRes.status}). check the repo/path/token in settings.`);
+    const getData = await getRes.json();
+    const currentText = b64ToUtf8(getData.content);
+
+    const startMarker = '/* DEFAULT_POSTS_START */';
+    const endMarker = '/* DEFAULT_POSTS_END */';
+    const startIdx = currentText.indexOf(startMarker);
+    const endIdx = currentText.indexOf(endMarker);
+    if (startIdx === -1 || endIdx === -1){
+      throw new Error('could not find the DEFAULT_POSTS markers in the live file — make sure the uploaded file matches this one.');
+    }
+    const newBlock = `${startMarker}\nconst defaultPosts = ${JSON.stringify(posts, null, 2)};\n${endMarker}`;
+    const newText = currentText.slice(0, startIdx) + newBlock + currentText.slice(endIdx + endMarker.length);
+
+    const putRes = await fetch(apiUrl, {
+      method:'PUT',
+      headers:{
+        'Authorization': `Bearer ${cfg.token}`,
+        'Accept':'application/vnd.github+json',
+        'Content-Type':'application/json'
+      },
+      body: JSON.stringify({
+        message: `update posts — ${new Date().toISOString()}`,
+        content: utf8ToB64(newText),
+        sha: getData.sha,
+        branch: cfg.branch
+      })
+    });
+    if (!putRes.ok){
+      const errBody = await putRes.json().catch(() => ({}));
+      throw new Error(errBody.message || `push failed (${putRes.status}).`);
+    }
+    showModal(`
+      <h3>published</h3>
+      <p class="note">pushed to ${cfg.owner}/${cfg.repo}. GitHub Pages usually updates within a minute or two.</p>
+      <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
+    `);
+  } catch(err){
+    showModal(`
+      <h3>publish failed</h3>
+      <p class="note">${(err.message || 'something went wrong').replace(/</g,'&lt;')}</p>
+      <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
+    `);
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+document.getElementById('publishLiveBtn').addEventListener('click', publishLive);
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const json = JSON.stringify(posts, null, 2);
+  navigator.clipboard.writeText(`const defaultPosts = ${json};`).then(() => {
+    showModal(`
+      <h3>copied</h3>
+      <p class="note">paste this over the defaultPosts array in the file to publish for everyone.</p>
+      <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
+    `);
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  showModal(`
+    <h3>reset local drafts?</h3>
+    <p class="note">this reverts to the published version in this file and can't be undone.</p>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="resetYes">reset</button>
+    </div>
+  `);
+  document.getElementById('resetYes').onclick = () => {
+    hideModal();
+    localStorage.removeItem('siteDrafts');
+    posts = JSON.parse(JSON.stringify(defaultPosts));
+    render();
+  };
+});
+
+/* ---------- passcode gate ---------- */
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function showModal(inner){
+  document.getElementById('modalBox').innerHTML = inner;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+function hideModal(){
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function promptSetPasscode(){
+  showModal(`
+    <h3>set a passcode</h3>
+    <p class="note">no one's set one on this browser yet. this only guards the edit tools — pick anything memorable.</p>
+    <input type="password" id="pc1" placeholder="new passcode">
+    <input type="password" id="pc2" placeholder="confirm passcode">
+    <div class="err" id="pcErr"></div>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" onclick="confirmSetPasscode()">save</button>
+    </div>
+  `);
+  document.getElementById('pc1').focus();
+}
+async function confirmSetPasscode(){
+  const a = document.getElementById('pc1').value;
+  const b = document.getElementById('pc2').value;
+  if (!a || a !== b){
+    document.getElementById('pcErr').textContent = "passcodes don't match.";
+    return;
+  }
+  localStorage.setItem('ownerHash', await sha256(a));
+  hideModal();
+  unlock();
+}
+
+function promptEnterPasscode(){
+  showModal(`
+    <h3>enter passcode</h3>
+    <input type="password" id="pcEnter" placeholder="passcode">
+    <div class="err" id="pcErr2"></div>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" onclick="confirmEnterPasscode()">unlock</button>
+    </div>
+  `);
+  const field = document.getElementById('pcEnter');
+  field.focus();
+  field.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEnterPasscode(); });
+}
+async function confirmEnterPasscode(){
+  const val = document.getElementById('pcEnter').value;
+  const hash = await sha256(val);
+  if (hash === localStorage.getItem('ownerHash')){
+    hideModal();
+    unlock();
+  } else {
+    document.getElementById('pcErr2').textContent = 'wrong passcode.';
+  }
+}
+
+function unlock(){
+  ownerMode = true;
+  document.body.classList.add('owner-mode');
+  document.getElementById('ownerToggle').classList.add('unlocked');
+  document.getElementById('editPanel').classList.add('open');
+  render();
+}
+function lock(){
+  ownerMode = false;
+  document.body.classList.remove('owner-mode');
+  document.getElementById('ownerToggle').classList.remove('unlocked');
+  document.getElementById('editPanel').classList.remove('open');
+  render();
+}
+function togglePanel(){
+  document.getElementById('editPanel').classList.toggle('open');
+}
+
+document.getElementById('ownerToggle').addEventListener('click', () => {
+  if (ownerMode){ togglePanel(); return; }
+  if (localStorage.getItem('ownerHash')) promptEnterPasscode();
+  else promptSetPasscode();
+});
+document.getElementById('panelArrow').addEventListener('click', () => {
+  document.getElementById('editPanel').classList.remove('open');
+});
+document.getElementById('lockBtn').addEventListener('click', () => lock());
+
+function buildSpiral(){
+  const cx = 50, cy = 50;
+  const turns = 2.6;
+  const maxR = 40;
+  const minR = 2;
+  const steps = 140;
+  let d = '';
+  for (let i = 0; i <= steps; i++){
+    const t = i / steps;
+    const angle = t * turns * Math.PI * 2;
+    const r = minR + (maxR - minR) * t;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    d += (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+  }
+  document.getElementById('spiralPath').setAttribute('d', d.trim());
+}
+buildSpiral();
+
+document.getElementById('homeBtn').addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeExpand();
+});
+</script>
+
+</body>
+</html>

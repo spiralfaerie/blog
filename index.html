@@ -675,7 +675,34 @@
    to find and replace this block.
 ============================================================ */
 /* DEFAULT_POSTS_START */
-const defaultPosts = [];
+const defaultPosts = [
+  {
+    date: "05.03.2026",
+    title: "bent mv",
+    text: "shoot day over — spent half of it in the water doing the same take on repeat. clothes still smell like campfire smoke.",
+    images: [
+      { label: "field kit", c1:"#8d7fa8", c2:"#3f3a52", ar:"4/5" },
+      { label: "on the rig", c1:"#5f8a80", c2:"#2c3c37", ar:"16/10" }
+    ]
+  },
+  {
+    date: "02.19.2026",
+    title: "back to the desk",
+    text: "reworked the bridge for the third time. sometimes the slow version is the one that sticks.",
+    images: [
+      { label: "studio corner", c1:"#b98a92", c2:"#4a3236", ar:"3/4" }
+    ]
+  },
+  {
+    date: "11.11.2024",
+    title: "bye ny",
+    text: "moving home for who knows how long. hoping less noise makes the finish line easier to see — still feels like it needs more songs.",
+    images: [
+      { label: "desk setup", c1:"#b99a63", c2:"#463a24", ar:"4/5" },
+      { label: "night session", c1:"#8d7fa8", c2:"#231f30", ar:"4/3" }
+    ]
+  }
+];
 /* DEFAULT_POSTS_END */
 
 /* ============================================================
@@ -702,14 +729,24 @@ function loadPosts(){
 }
 function saveDrafts(){
   try{
-    localStorage.setItem('siteDrafts', JSON.stringify(posts));
+    // media that's still a raw local File (not yet uploaded to GitHub)
+    // can't be persisted to localStorage — it's dropped from the saved
+    // draft until it's actually published. Everything else is kept.
+    const sanitized = posts.map(p => ({
+      ...p,
+      images: (p.images || []).filter(i => !i.file)
+    }));
+    localStorage.setItem('siteDrafts', JSON.stringify(sanitized));
   } catch(e){
     showModal(`
       <h3>storage full</h3>
-      <p class="note">your browser's local storage is full, likely from image files. try removing a photo, or export what you have and publish it, then start a fresh draft.</p>
+      <p class="note">your browser's local storage is full. try removing something, or publish live to clear the backlog.</p>
       <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
     `);
   }
+}
+function mediaSrc(item){
+  return item.path || item.previewUrl || item.src || '';
 }
 function readFileAsDataURL(file){
   return new Promise((resolve, reject) => {
@@ -742,18 +779,19 @@ function playIconSVG(size){
 
 function renderMediaTile(item, postIdx, itemIdx){
   const delBtn = `<button class="img-del x-btn" onclick="event.stopPropagation(); deleteImage(${postIdx},${itemIdx})" title="remove">${xIconSVG(12)}</button>`;
+  const resolvedSrc = mediaSrc(item);
   if (item.type === 'video'){
     return `
       <div class="img-tile video-tile" data-post="${postIdx}" data-img="${itemIdx}"
            onclick="event.stopPropagation(); selectVideoTile(this)">
-        <video class="tile-video" src="${item.src}" muted playsinline preload="metadata"></video>
+        <video class="tile-video" src="${resolvedSrc}" muted playsinline preload="metadata"></video>
         <button class="play-btn x-btn" onclick="event.stopPropagation(); playVideoTile(this.closest('.video-tile'))" title="play">${playIconSVG(18)}</button>
         <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
         ${delBtn}
       </div>`;
   }
-  const body = item.src
-    ? `<img src="${item.src}" alt="${item.label || ''}" onload="fitExpandCard()">`
+  const body = resolvedSrc
+    ? `<img src="${resolvedSrc}" alt="${item.label || ''}" onload="fitExpandCard()">`
     : `<div class="ph" data-label="${item.label || ''}"
          style="--c1:${item.c1 || '#8d7fa8'};--c2:${item.c2 || '#3f3a52'};--ar:${item.ar || '4/5'}"></div>`;
   return `
@@ -914,7 +952,7 @@ function addImageToPost(pIdx){
       <button class="primary" id="imgAddYes">add</button>
     </div>
   `);
-  document.getElementById('imgAddYes').onclick = async () => {
+  document.getElementById('imgAddYes').onclick = () => {
     const files = Array.from(document.getElementById('imgFile').files);
     const label = document.getElementById('imgLabel').value.trim();
     if (!files.length){
@@ -924,8 +962,12 @@ function addImageToPost(pIdx){
     hideModal();
     posts[pIdx].images = posts[pIdx].images || [];
     for (const f of files){
-      const src = await readFileAsDataURL(f);
-      posts[pIdx].images.push({ type: f.type.startsWith('video/') ? 'video' : 'image', src, label });
+      posts[pIdx].images.push({
+        type: f.type.startsWith('video/') ? 'video' : 'image',
+        file: f,
+        previewUrl: URL.createObjectURL(f),
+        label
+      });
     }
     saveDrafts();
     render();
@@ -943,11 +985,14 @@ let pendingMedia = [];
 document.getElementById('addMediaBtn').addEventListener('click', () => {
   document.getElementById('mediaPicker').click();
 });
-document.getElementById('mediaPicker').addEventListener('change', async (e) => {
+document.getElementById('mediaPicker').addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
   for (const f of files){
-    const src = await readFileAsDataURL(f);
-    pendingMedia.push({ type: f.type.startsWith('video/') ? 'video' : 'image', src });
+    pendingMedia.push({
+      type: f.type.startsWith('video/') ? 'video' : 'image',
+      file: f,
+      previewUrl: URL.createObjectURL(f)
+    });
   }
   e.target.value = '';
   renderPendingMedia();
@@ -955,7 +1000,7 @@ document.getElementById('mediaPicker').addEventListener('change', async (e) => {
 function renderPendingMedia(){
   document.getElementById('pendingMedia').innerHTML = pendingMedia.map((m, i) => `
     <div class="pending-thumb">
-      ${m.type === 'video' ? `<video src="${m.src}" muted></video>` : `<img src="${m.src}">`}
+      ${m.type === 'video' ? `<video src="${m.previewUrl}" muted></video>` : `<img src="${m.previewUrl}">`}
       <button class="x-btn" onclick="removePendingMedia(${i})">${xIconSVG(10)}</button>
     </div>`).join('');
 }
@@ -1041,14 +1086,54 @@ function openGhSettings(){
 }
 document.getElementById('ghSettingsBtn').addEventListener('click', openGhSettings);
 
+async function uploadMediaFile(file, cfg){
+  const dataUrl = await readFileAsDataURL(file);
+  const base64 = dataUrl.split(',')[1];
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'file';
+  const path = `media/${Date.now()}-${safeName}`;
+  const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+  const res = await fetch(apiUrl, {
+    method:'PUT',
+    headers:{
+      'Authorization': `Bearer ${cfg.token}`,
+      'Accept':'application/vnd.github+json',
+      'Content-Type':'application/json'
+    },
+    body: JSON.stringify({
+      message: `upload media: ${safeName}`,
+      content: base64,
+      branch: cfg.branch
+    })
+  });
+  if (!res.ok){
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `media upload failed (${res.status}) for ${file.name}`);
+  }
+  return path;
+}
+
 async function publishLive(){
   const cfg = getGhConfig();
   if (!cfg){ openGhSettings(); return; }
   const btn = document.getElementById('publishLiveBtn');
   const originalLabel = btn.textContent;
-  btn.textContent = 'publishing…';
   btn.disabled = true;
   try{
+    // upload any media that's still a raw local file, one at a time,
+    // and swap it for the real path GitHub gives back
+    const pending = [];
+    posts.forEach(p => (p.images || []).forEach(item => { if (item.file) pending.push(item); }));
+    for (let i = 0; i < pending.length; i++){
+      btn.textContent = `uploading media ${i + 1}/${pending.length}…`;
+      const item = pending[i];
+      const path = await uploadMediaFile(item.file, cfg);
+      item.path = path;
+      delete item.file;
+      delete item.previewUrl;
+    }
+    saveDrafts();
+
+    btn.textContent = 'publishing…';
     const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`;
     const getRes = await fetch(apiUrl, {
       headers:{ 'Authorization': `Bearer ${cfg.token}`, 'Accept':'application/vnd.github+json' }

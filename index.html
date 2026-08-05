@@ -473,6 +473,17 @@
     transition:color 0.2s ease;
   }
   .panel-arrow:hover{ color:var(--rose); }
+  .pending-warning{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    line-height:1.5;
+    color:var(--rose);
+    background:rgba(209,113,124,0.1);
+    border:1px solid rgba(209,113,124,0.35);
+    border-radius:3px;
+    padding:8px 10px;
+    margin-bottom:10px;
+  }
 
   /* stylized close/remove buttons, matching the spiral's linework */
   .x-btn{
@@ -637,6 +648,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
+  <div class="pending-warning" id="pendingWarning" style="display:none;"></div>
   <input type="text" id="newTitle" placeholder="title (optional)">
   <textarea id="newText" placeholder="text (optional)"></textarea>
   <label class="file-label">photos & videos (optional)</label>
@@ -677,18 +689,30 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.05.2026",
-    "time": "2:02:30 pm",
-    "title": "entry test",
-    "text": "test",
-    "images": [
-      {
-        "type": "video",
-        "label": "",
-        "path": "media/1785957025671-Video_Project_2_2__1_.mp4"
-      }
-    ],
-    "color": "#1f0b24"
+    date: "05.03.2026",
+    title: "bent mv",
+    text: "shoot day over — spent half of it in the water doing the same take on repeat. clothes still smell like campfire smoke.",
+    images: [
+      { label: "field kit", c1:"#8d7fa8", c2:"#3f3a52", ar:"4/5" },
+      { label: "on the rig", c1:"#5f8a80", c2:"#2c3c37", ar:"16/10" }
+    ]
+  },
+  {
+    date: "02.19.2026",
+    title: "back to the desk",
+    text: "reworked the bridge for the third time. sometimes the slow version is the one that sticks.",
+    images: [
+      { label: "studio corner", c1:"#b98a92", c2:"#4a3236", ar:"3/4" }
+    ]
+  },
+  {
+    date: "11.11.2024",
+    title: "bye ny",
+    text: "moving home for who knows how long. hoping less noise makes the finish line easier to see — still feels like it needs more songs.",
+    images: [
+      { label: "desk setup", c1:"#b99a63", c2:"#463a24", ar:"4/5" },
+      { label: "night session", c1:"#8d7fa8", c2:"#231f30", ar:"4/3" }
+    ]
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -736,6 +760,26 @@ function saveDrafts(){
 function mediaSrc(item){
   return item.path || item.previewUrl || item.src || '';
 }
+function pendingMediaCount(){
+  return posts.reduce((n, p) => n + (p.images || []).filter(i => i.file).length, 0);
+}
+function updatePendingBanner(){
+  const el = document.getElementById('pendingWarning');
+  if (!el) return;
+  const n = pendingMediaCount();
+  if (n > 0){
+    el.textContent = `⚠ ${n} unpublished photo${n > 1 ? 's/videos' : '/video'} — don't refresh or close this tab until you hit "publish live", or it'll be lost.`;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+window.addEventListener('beforeunload', (e) => {
+  if (pendingMediaCount() > 0){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 function readFileAsDataURL(file){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -881,6 +925,7 @@ function render(){
     delay += 0.05;
   });
   feed.innerHTML = html;
+  updatePendingBanner();
 }
 render();
 
@@ -1163,6 +1208,7 @@ async function publishLive(){
       const errBody = await putRes.json().catch(() => ({}));
       throw new Error(errBody.message || `push failed (${putRes.status}).`);
     }
+    render();
     showModal(`
       <h3>published</h3>
       <p class="note">pushed to ${cfg.owner}/${cfg.repo}. GitHub Pages usually updates within a minute or two.</p>

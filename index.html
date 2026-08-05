@@ -677,17 +677,30 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.05.2026",
-    "time": "2:02:30 pm",
-    "title": "entry test",
-    "text": "test",
-    "images": [
-      {
-        "type": "video",
-        "path": "media/1785956652764-Video_Project_2_2__1_.mp4"
-      }
-    ],
-    "color": "#1f0b24"
+    date: "05.03.2026",
+    title: "bent mv",
+    text: "shoot day over — spent half of it in the water doing the same take on repeat. clothes still smell like campfire smoke.",
+    images: [
+      { label: "field kit", c1:"#8d7fa8", c2:"#3f3a52", ar:"4/5" },
+      { label: "on the rig", c1:"#5f8a80", c2:"#2c3c37", ar:"16/10" }
+    ]
+  },
+  {
+    date: "02.19.2026",
+    title: "back to the desk",
+    text: "reworked the bridge for the third time. sometimes the slow version is the one that sticks.",
+    images: [
+      { label: "studio corner", c1:"#b98a92", c2:"#4a3236", ar:"3/4" }
+    ]
+  },
+  {
+    date: "11.11.2024",
+    title: "bye ny",
+    text: "moving home for who knows how long. hoping less noise makes the finish line easier to see — still feels like it needs more songs.",
+    images: [
+      { label: "desk setup", c1:"#b99a63", c2:"#463a24", ar:"4/5" },
+      { label: "night session", c1:"#8d7fa8", c2:"#231f30", ar:"4/3" }
+    ]
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -771,7 +784,8 @@ function renderMediaTile(item, postIdx, itemIdx){
     return `
       <div class="img-tile video-tile" data-post="${postIdx}" data-img="${itemIdx}"
            onclick="event.stopPropagation(); selectVideoTile(this)">
-        <video class="tile-video" src="${resolvedSrc}" muted playsinline preload="metadata"></video>
+        <video class="tile-video" src="${resolvedSrc}" muted loop autoplay playsinline
+               onloadedmetadata="this.playbackRate=0.25"></video>
         <button class="play-btn x-btn" onclick="event.stopPropagation(); playVideoTile(this.closest('.video-tile'))" title="play">${playIconSVG(18)}</button>
         <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
         ${delBtn}
@@ -788,21 +802,10 @@ function renderMediaTile(item, postIdx, itemIdx){
     </div>`;
 }
 
-/* gif-style choppy preview: periodically jump the paused, muted video
-   forward instead of playing it normally — no audio, no real playback,
-   until the person actually selects then plays it. */
-setInterval(() => {
-  document.querySelectorAll('.video-tile:not(.selected):not(.playing) video').forEach(v => {
-    if (!v.duration || isNaN(v.duration)) return;
-    let t = (v.currentTime || 0) + 0.4;
-    if (t >= v.duration) t = 0;
-    v.currentTime = t;
-  });
-}, 220);
-
 function selectVideoTile(tile){
   if (tile.classList.contains('selected') || tile.classList.contains('playing')) return;
   tile.classList.add('selected');
+  tile.querySelector('video').pause();
   fitExpandCard();
 }
 function playVideoTile(tile){
@@ -810,6 +813,8 @@ function playVideoTile(tile){
   tile.classList.add('playing');
   const video = tile.querySelector('video');
   video.muted = false;
+  video.playbackRate = 1;
+  video.loop = false;
   video.currentTime = 0;
   video.play();
 }

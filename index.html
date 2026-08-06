@@ -514,24 +514,12 @@
   .video-tile{ cursor:pointer; }
   .tile-video{ width:100%; height:100%; object-fit:cover; display:block; }
 
-  .play-btn{
-    position:absolute;
-    top:50%; left:50%;
-    transform:translate(-50%,-50%);
-    width:42px; height:42px;
-    display:none;
-  }
-  .video-tile.selected .play-btn{ display:flex; }
-  .video-tile.selected .play-btn:hover{ transform:translate(-50%,-50%); }
-
   .vol-btn{
     position:absolute; top:8px; left:8px;
     width:24px; height:24px;
-    display:none;
     opacity:0.85;
   }
-  .video-tile.playing .vol-btn{ display:flex; }
-  .video-tile.playing:hover .vol-btn{ opacity:1; }
+  .expanded-video:hover .vol-btn{ opacity:1; }
 
   /* ---------- pending media (new-entry staging) ---------- */
   .pending-media{
@@ -593,19 +581,15 @@
 
   .expand-images{ gap:2px; }
   .expand-images .img-tile{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(0,0,0,0.2);
+    overflow:hidden;
   }
   .expand-images .img-tile img,
   .expand-images .img-tile video,
   .expand-images .img-tile .ph{
-    width:auto;
-    height:auto;
-    max-width:100%;
-    max-height:60vh;
-    object-fit:contain;
+    width:100%;
+    height:65vh;
+    object-fit:cover;
+    display:block;
   }
   .expand-body{ padding:26px 30px 30px; }
   .expand-body .entry-title{ font-size:32px; margin-bottom:16px; }
@@ -689,30 +673,30 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.05.2026",
-    "time": "7:01:58 pm",
-    "title": "",
-    "text": "",
-    "images": [
-      {
-        "type": "video",
-        "path": "media/1785974522790-Video_Project_2_2__1_.mp4"
-      }
-    ],
-    "color": "#15111e"
+    date: "05.03.2026",
+    title: "bent mv",
+    text: "shoot day over — spent half of it in the water doing the same take on repeat. clothes still smell like campfire smoke.",
+    images: [
+      { label: "field kit", c1:"#8d7fa8", c2:"#3f3a52", ar:"4/5" },
+      { label: "on the rig", c1:"#5f8a80", c2:"#2c3c37", ar:"16/10" }
+    ]
   },
   {
-    "date": "08.05.2026",
-    "time": "6:59:57 pm",
-    "title": "",
-    "text": "",
-    "images": [
-      {
-        "type": "image",
-        "path": "media/1785974399439-yea_ok.jpg"
-      }
-    ],
-    "color": "#15111e"
+    date: "02.19.2026",
+    title: "back to the desk",
+    text: "reworked the bridge for the third time. sometimes the slow version is the one that sticks.",
+    images: [
+      { label: "studio corner", c1:"#b98a92", c2:"#4a3236", ar:"3/4" }
+    ]
+  },
+  {
+    date: "11.11.2024",
+    title: "bye ny",
+    text: "moving home for who knows how long. hoping less noise makes the finish line easier to see — still feels like it needs more songs.",
+    images: [
+      { label: "desk setup", c1:"#b99a63", c2:"#463a24", ar:"4/5" },
+      { label: "night session", c1:"#8d7fa8", c2:"#231f30", ar:"4/3" }
+    ]
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -809,17 +793,24 @@ function playIconSVG(size){
   </svg>`;
 }
 
-function renderMediaTile(item, postIdx, itemIdx){
+function renderMediaTile(item, postIdx, itemIdx, expanded){
   const delBtn = `<button class="img-del x-btn" onclick="event.stopPropagation(); deleteImage(${postIdx},${itemIdx})" title="remove">${xIconSVG(12)}</button>`;
   const resolvedSrc = mediaSrc(item);
   if (item.type === 'video'){
+    if (expanded){
+      const startAt = item.lastTime || 0;
+      return `
+        <div class="img-tile video-tile expanded-video" data-post="${postIdx}" data-img="${itemIdx}">
+          <video class="tile-video" src="${resolvedSrc}" playsinline
+                 onloadedmetadata="this.currentTime=${startAt};"></video>
+          <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
+          ${delBtn}
+        </div>`;
+    }
     return `
       <div class="img-tile video-tile" data-post="${postIdx}" data-img="${itemIdx}"
-           onclick="event.stopPropagation(); selectVideoTile(this)">
-        <video class="tile-video" src="${resolvedSrc}" muted loop autoplay playsinline
-               onloadedmetadata="this.playbackRate=0.25"></video>
-        <button class="play-btn x-btn" onclick="event.stopPropagation(); playVideoTile(this.closest('.video-tile'))" title="play">${playIconSVG(18)}</button>
-        <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
+           onclick="handleVideoTileClick(this, ${postIdx}, ${itemIdx})">
+        <video class="tile-video" src="${resolvedSrc}" muted playsinline preload="metadata"></video>
         ${delBtn}
       </div>`;
   }
@@ -834,21 +825,19 @@ function renderMediaTile(item, postIdx, itemIdx){
     </div>`;
 }
 
-function selectVideoTile(tile){
-  if (tile.classList.contains('selected') || tile.classList.contains('playing')) return;
-  tile.classList.add('selected');
-  tile.querySelector('video').pause();
-  fitExpandCard();
-}
-function playVideoTile(tile){
-  tile.classList.remove('selected');
-  tile.classList.add('playing');
+/* clicking a video tile pauses/mutes the ambient preview right where it
+   is, marks it so the slideshow-jump interval leaves it alone, and lets
+   the click keep bubbling up to the card's own onclick — which opens
+   the shared expand view, same as clicking anywhere else on the card */
+let activeExpandTile = null;
+function handleVideoTileClick(tile, postIdx, itemIdx){
   const video = tile.querySelector('video');
-  video.muted = false;
-  video.playbackRate = 1;
-  video.loop = false;
-  video.currentTime = 0;
-  video.play();
+  const item = posts[postIdx].images[itemIdx];
+  item.lastTime = video.currentTime || 0;
+  video.pause();
+  video.muted = true;
+  tile.classList.add('expand-source');
+  activeExpandTile = tile;
 }
 function toggleVolumeBtn(btn){
   const video = btn.closest('.video-tile').querySelector('video');
@@ -861,7 +850,7 @@ function openExpand(pIdx){
   const post = posts[pIdx];
   const images = post.images || [];
   const cols = images.length >= 2 ? 2 : 1;
-  const mediaHtml = images.map((img, iIdx) => renderMediaTile(img, pIdx, iIdx)).join('');
+  const mediaHtml = images.map((img, iIdx) => renderMediaTile(img, pIdx, iIdx, true)).join('');
   document.getElementById('expandOverlay').innerHTML = `
     <div class="expand-card" style="${post.color ? `background:${post.color};` : ''}" onclick="event.stopPropagation()">
       <button class="expand-close x-btn" onclick="closeExpand()" title="close">${xIconSVG(16)}</button>
@@ -878,10 +867,20 @@ function openExpand(pIdx){
     </div>`;
   document.getElementById('expandOverlay').classList.add('open');
   requestAnimationFrame(fitExpandCard);
-  kickstartPreviewVideos(document.getElementById('expandOverlay'));
+  // start expanded video(s) with sound right away — still within the
+  // same synchronous call stack as the click, so autoplay policy allows it
+  document.querySelectorAll('#expandOverlay .expanded-video video').forEach(v => {
+    v.muted = false;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => { v.muted = true; v.play().catch(() => {}); });
+  });
 }
 function closeExpand(){
   document.getElementById('expandOverlay').classList.remove('open');
+  if (activeExpandTile){
+    activeExpandTile.classList.remove('expand-source');
+    activeExpandTile = null;
+  }
 }
 
 /* media is capped via CSS (max-height + object-fit:contain), so no
@@ -930,12 +929,35 @@ function render(){
   kickstartPreviewVideos(feed);
 }
 function kickstartPreviewVideos(scope){
-  scope.querySelectorAll('.video-tile:not(.selected):not(.playing) video').forEach(v => {
-    v.muted = true;
-    const p = v.play();
-    if (p && p.catch) p.catch(() => {});
-  });
+  scope.querySelectorAll('.video-tile:not(.expand-source) video').forEach(v => briefPlay(v));
 }
+/* nudges a paused, muted preview video to actually paint a frame —
+   playing (even briefly) reliably renders in every browser, unlike
+   seeking a fully-paused element, which some browsers leave blank */
+function briefPlay(v){
+  v.muted = true;
+  const tile = v.closest('.video-tile');
+  const p = v.play();
+  if (p && p.then){
+    p.then(() => {
+      setTimeout(() => {
+        if (tile && !tile.classList.contains('expand-source')) v.pause();
+      }, 280);
+    }).catch(() => {});
+  }
+}
+/* slideshow effect: every 10s, jump each idle preview forward ~10s
+   and hold that still frame — reads as a handful of stills rather
+   than a smoothly playing video, with no sound either way */
+setInterval(() => {
+  document.querySelectorAll('.video-tile:not(.expand-source) video').forEach(v => {
+    if (!v.duration || isNaN(v.duration)) return;
+    let t = (v.currentTime || 0) + 10;
+    if (t >= v.duration) t = 0;
+    v.currentTime = t;
+    briefPlay(v);
+  });
+}, 10000);
 render();
 
 function updateField(pIdx, field, value){
@@ -1317,6 +1339,15 @@ function promptEnterPasscode(){
   const field = document.getElementById('pcEnter');
   field.focus();
   field.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEnterPasscode(); });
+}
+/* One-time recovery — deliberately NOT wired to any visible button.
+   If you forget your passcode, open this page's browser console
+   (F12) and type resetPasscode() yourself, then set a new one. */
+function resetPasscode(){
+  localStorage.removeItem('ownerHash');
+  hideModal();
+  promptSetPasscode();
+  return 'passcode cleared — set a new one in the dialog that just opened.';
 }
 async function confirmEnterPasscode(){
   const val = document.getElementById('pcEnter').value;

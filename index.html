@@ -1355,7 +1355,11 @@ function openGhSettings(){
     const repo = document.getElementById('ghRepo').value.trim();
     const path = document.getElementById('ghPath').value.trim() || 'index.html';
     const branch = document.getElementById('ghBranch').value.trim() || 'main';
-    const relayUrl = document.getElementById('ghRelay').value.trim().replace(/\/$/, '');
+let relayUrl = document.getElementById('ghRelay').value.trim().replace(/\/$/, '');
+
+if (!/^https?:\/\//i.test(relayUrl)) {
+    relayUrl = 'https://' + relayUrl;
+}
     if (!owner || !repo || !relayUrl){
       document.getElementById('ghErr').textContent = 'username, repo, and relay URL are required.';
       return;

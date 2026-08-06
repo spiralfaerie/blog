@@ -1595,6 +1595,7 @@ async function startGithubLogin(){
     return;
   }
   try{
+    console.log("relayUrl =", cfg.relayUrl);
     const codeRes = await fetch(`${cfg.relayUrl}/device/code`, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },

@@ -180,6 +180,7 @@
     line-height:1.65;
     color:var(--ink-dim);
     margin:0;
+    white-space:pre-wrap;
   }
 
   .ph{
@@ -544,6 +545,84 @@
     background:rgba(3,2,6,0.7);
   }
 
+  .pending-audio{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-dim);
+    background:rgba(255,255,255,0.03);
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    padding:6px 8px;
+    margin-bottom:8px;
+  }
+  .pending-audio span{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pending-audio .x-btn{ width:16px; height:16px; flex-shrink:0; }
+
+  .theme-grid{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    margin-bottom:8px;
+  }
+  .theme-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .theme-row span{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-dim);
+  }
+  .theme-row input[type="color"]{
+    width:28px; height:22px;
+    padding:0;
+    border:1px solid var(--hairline);
+    border-radius:3px;
+    background:none;
+    cursor:pointer;
+  }
+
+  .audio-volume{
+    position:absolute;
+    left:14px; bottom:14px;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:rgba(3,2,6,0.55);
+    border-radius:20px;
+    padding:6px 12px 6px 8px;
+  }
+  .audio-volume .vol-icon{ color:var(--rose); display:flex; flex-shrink:0; }
+  .audio-volume input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:70px;
+    height:3px;
+    background:rgba(255,255,255,0.25);
+    border-radius:2px;
+    outline:none;
+  }
+  .audio-volume input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:11px; height:11px;
+    border-radius:50%;
+    background:var(--rose);
+    cursor:pointer;
+  }
+  .audio-volume input[type="range"]::-moz-range-thumb{
+    width:11px; height:11px;
+    border:none;
+    border-radius:50%;
+    background:var(--rose);
+    cursor:pointer;
+  }
+
   /* ---------- click-to-expand ---------- */
   body:not(.owner-mode) .card{ cursor:pointer; }
 
@@ -611,7 +690,7 @@
 <header class="top">
   <button class="spiral-home" id="homeBtn" aria-label="Home" title="Home">
     <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <path id="spiralPath" fill="none" stroke="#cc6d78" stroke-width="2.1"
+      <path id="spiralPath" fill="none" stroke="var(--rose)" stroke-width="2.1"
             stroke-linecap="round"/>
     </svg>
   </button>
@@ -639,6 +718,10 @@
   <div class="pending-media" id="pendingMedia"></div>
   <button type="button" class="add-btn" id="addMediaBtn">+ add photos / videos</button>
   <input type="file" id="mediaPicker" accept="image/*,video/*" multiple style="display:none;">
+  <label class="file-label">background audio (optional)</label>
+  <div class="pending-audio" id="pendingAudioBox" style="display:none;"></div>
+  <button type="button" class="add-btn" id="addAudioBtn">+ add audio</button>
+  <input type="file" id="audioPicker" accept="audio/*" style="display:none;">
   <label class="file-label">card color (optional)</label>
   <div class="color-row">
     <input type="color" id="newColor" value="#15111e">
@@ -646,6 +729,11 @@
     <button type="button" id="colorReset" title="reset to default">reset</button>
   </div>
   <button class="add-btn" id="addEntryBtn">+ publish entry</button>
+
+  <label class="file-label" style="margin-top:6px;">site theme</label>
+  <div class="theme-grid" id="themeGrid"></div>
+  <button class="reset-btn" id="themeResetBtn">reset theme to default</button>
+
   <div class="hint" id="publishHint">connect a GitHub repo once, then hit "publish live" to push changes straight to your site — no copying, no re-uploading.</div>
   <button class="export-btn" id="publishLiveBtn">publish live</button>
   <button class="reset-btn" id="ghSettingsBtn">github settings</button>
@@ -673,20 +761,31 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.05.2026",
-    "time": "8:11:04 pm",
-    "title": "humanity x machinery",
-    "text": "i made this little photo, it involves two of my favorite artists\n\nsonicbrat, and james ivy \n\nthere's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that\n\n i want to make something of the same feeling, so i thought i'd write about it\n\n oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it \n\n(and maybe improve my grammar too)",
-    "images": [
-      {
-        "type": "image",
-        "path": "media/1785978816196-humanity-x-machinery.png"
-      }
+    date: "08.05.2026",
+    time: "8:11:04 pm",
+    title: "humanity x machinery",
+    text: "i made this little photo, it involves two of my favorite artists sonicbrat, and james ivy  there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that  i want to make something of the same feeling, so i thought i'd write about it  oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it  (and maybe improve my grammar too)",
+    images: [
+      { type: "image", path: "media/1785978816196-humanity-x-machinery.png" }
     ],
-    "color": "#09090f"
+    color: "#09090f"
   }
 ];
 /* DEFAULT_POSTS_END */
+
+/* ============================================================
+   DEFAULT THEME
+   Same deal as DEFAULT_POSTS — this ships the site's color palette
+   to every visitor. Customize it live via the theme editor in the
+   owner panel, then "publish live" pushes it here the same way.
+============================================================ */
+/* DEFAULT_THEME_START */
+const defaultTheme = {
+  bg: "#0c0a12", card: "#15111e", cardHi: "#1c1628",
+  rose: "#d1717c", lavender: "#9a80e0", sage: "#45a68d", gold: "#dba63e",
+  ink: "#e6dfda", inkDim: "#8a7f96", hairline: "#241c33"
+};
+/* DEFAULT_THEME_END */
 
 /* ============================================================
    WHY IT WORKS THIS WAY
@@ -704,21 +803,69 @@ const defaultPosts = [
 ============================================================ */
 
 let posts = loadPosts();
+let theme = loadTheme();
 let ownerMode = false;
 
 function loadPosts(){
   const saved = localStorage.getItem('siteDrafts');
   return saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPosts));
 }
+function loadTheme(){
+  const saved = localStorage.getItem('themeDrafts');
+  return saved ? { ...defaultTheme, ...JSON.parse(saved) } : { ...defaultTheme };
+}
+function saveThemeDrafts(){
+  try{ localStorage.setItem('themeDrafts', JSON.stringify(theme)); } catch(e){}
+}
+const THEME_VAR_MAP = {
+  bg:'--bg', card:'--card', cardHi:'--card-hi', rose:'--rose', lavender:'--lavender',
+  sage:'--sage', gold:'--gold', ink:'--ink', inkDim:'--ink-dim', hairline:'--hairline'
+};
+function applyTheme(){
+  const root = document.documentElement.style;
+  Object.keys(THEME_VAR_MAP).forEach(key => {
+    if (theme[key]) root.setProperty(THEME_VAR_MAP[key], theme[key]);
+  });
+}
+applyTheme();
+
+const THEME_LABELS = {
+  bg:'background', card:'card background', cardHi:'card (hover)',
+  rose:'rose accent (spiral, links)', lavender:'lavender accent', sage:'sage accent',
+  gold:'gold (date text)', ink:'main text', inkDim:'secondary text', hairline:'borders'
+};
+function renderThemeGrid(){
+  const grid = document.getElementById('themeGrid');
+  if (!grid) return;
+  grid.innerHTML = Object.keys(THEME_VAR_MAP).map(key => `
+    <div class="theme-row">
+      <span>${THEME_LABELS[key]}</span>
+      <input type="color" value="${theme[key]}" oninput="updateThemeColor('${key}', this.value)">
+    </div>`).join('');
+}
+function updateThemeColor(key, value){
+  theme[key] = value;
+  applyTheme();
+  saveThemeDrafts();
+}
+renderThemeGrid();
+document.getElementById('themeResetBtn').addEventListener('click', () => {
+  theme = { ...defaultTheme };
+  applyTheme();
+  saveThemeDrafts();
+  renderThemeGrid();
+});
+
 function saveDrafts(){
   try{
     // media that's still a raw local File (not yet uploaded to GitHub)
     // can't be persisted to localStorage — it's dropped from the saved
     // draft until it's actually published. Everything else is kept.
-    const sanitized = posts.map(p => ({
-      ...p,
-      images: (p.images || []).filter(i => !i.file)
-    }));
+    const sanitized = posts.map(p => {
+      const clean = { ...p, images: (p.images || []).filter(i => !i.file) };
+      if (clean.audio && clean.audio.file) delete clean.audio;
+      return clean;
+    });
     localStorage.setItem('siteDrafts', JSON.stringify(sanitized));
   } catch(e){
     showModal(`
@@ -732,7 +879,11 @@ function mediaSrc(item){
   return item.path || item.previewUrl || item.src || '';
 }
 function pendingMediaCount(){
-  return posts.reduce((n, p) => n + (p.images || []).filter(i => i.file).length, 0);
+  return posts.reduce((n, p) => {
+    const imgCount = (p.images || []).filter(i => i.file).length;
+    const audioCount = (p.audio && p.audio.file) ? 1 : 0;
+    return n + imgCount + audioCount;
+  }, 0);
 }
 function updatePendingBanner(){
   const el = document.getElementById('pendingWarning');
@@ -797,7 +948,7 @@ function renderMediaTile(item, postIdx, itemIdx, expanded){
     return `
       <div class="img-tile video-tile" data-post="${postIdx}" data-img="${itemIdx}"
            onclick="handleVideoTileClick(this, ${postIdx}, ${itemIdx})">
-        <video class="tile-video" src="${resolvedSrc}" muted loop autoplay playsinline></video>
+        <video class="tile-video" src="${resolvedSrc}" muted playsinline preload="metadata"></video>
         ${delBtn}
       </div>`;
   }
@@ -838,6 +989,7 @@ function openExpand(pIdx){
   const images = post.images || [];
   const cols = images.length >= 2 ? 2 : 1;
   const mediaHtml = images.map((img, iIdx) => renderMediaTile(img, pIdx, iIdx, true)).join('');
+  const audioSrc = post.audio ? mediaSrc(post.audio) : '';
   document.getElementById('expandOverlay').innerHTML = `
     <div class="expand-card" style="${post.color ? `background:${post.color};` : ''}" onclick="event.stopPropagation()">
       <button class="expand-close x-btn" onclick="closeExpand()" title="close">${xIconSVG(16)}</button>
@@ -849,21 +1001,37 @@ function openExpand(pIdx){
         <div class="entry-body expand-body">
           <span class="entry-date">${post.date}${post.time ? `<span class="entry-time">${post.time}</span>` : ''}</span>
           ${post.title ? `<h2 class="entry-title">${post.title}</h2>` : ''}
-          ${post.text ? `<p class="entry-text">${post.text}</p>` : ''}
+          ${post.text ? `<div class="entry-text">${post.text}</div>` : ''}
+        </div>` : ''}
+      ${audioSrc ? `
+        <audio id="expandAudio" src="${audioSrc}" loop></audio>
+        <div class="audio-volume" onclick="event.stopPropagation()">
+          <span class="vol-icon">${volIconSVG(false, 13)}</span>
+          <input type="range" min="0" max="1" step="0.01" value="0.7"
+                 oninput="document.getElementById('expandAudio').volume=this.value">
         </div>` : ''}
     </div>`;
   document.getElementById('expandOverlay').classList.add('open');
   requestAnimationFrame(fitExpandCard);
-  // start expanded video(s) with sound right away — still within the
-  // same synchronous call stack as the click, so autoplay policy allows it
+  // start expanded video(s) and audio with sound right away — still
+  // within the same synchronous call stack as the click, so autoplay
+  // policy allows it
   document.querySelectorAll('#expandOverlay .expanded-video video').forEach(v => {
     v.muted = false;
     const p = v.play();
     if (p && p.catch) p.catch(() => { v.muted = true; v.play().catch(() => {}); });
   });
+  const audioEl = document.getElementById('expandAudio');
+  if (audioEl){
+    audioEl.volume = 0.7;
+    const p = audioEl.play();
+    if (p && p.catch) p.catch(() => {});
+  }
 }
 function closeExpand(){
   document.getElementById('expandOverlay').classList.remove('open');
+  const audioEl = document.getElementById('expandAudio');
+  if (audioEl) audioEl.pause();
   if (activeExpandTile){
     activeExpandTile.classList.remove('expand-source');
     activeExpandTile = null;
@@ -900,10 +1068,13 @@ function render(){
           <span class="entry-date">${post.date}${post.time ? `<span class="entry-time">${post.time}</span>` : ''}</span>
           ${showTitle ? `<h2 class="entry-title" contenteditable="${ownerMode}" data-placeholder="title..."
               onblur="updateField(${pIdx},'title',this.innerText)">${post.title || ''}</h2>` : ''}
-          ${showText ? `<p class="entry-text" contenteditable="${ownerMode}" data-placeholder="text..."
-             onblur="updateField(${pIdx},'text',this.innerText)">${post.text || ''}</p>` : ''}
+          ${showText ? `<div class="entry-text" contenteditable="${ownerMode}" data-placeholder="text..."
+             onkeydown="handleEditableKeydown(event)"
+             onblur="updateField(${pIdx},'text',this.innerText)">${post.text || ''}</div>` : ''}
           <div class="card-controls">
             <button onclick="addImageToPost(${pIdx})">+ media</button>
+            <button onclick="addAudioToPost(${pIdx})">${post.audio ? 'change audio' : '+ audio'}</button>
+            ${post.audio ? `<button onclick="removeAudioFromPost(${pIdx})">remove audio</button>` : ''}
             <button onclick="editEntryColor(${pIdx})">color</button>
             <button onclick="deleteEntry(${pIdx})">delete entry</button>
           </div>
@@ -916,17 +1087,54 @@ function render(){
   kickstartPreviewVideos(feed);
 }
 function kickstartPreviewVideos(scope){
-  scope.querySelectorAll('.video-tile:not(.expand-source) video').forEach(v => {
-    v.muted = true;
-    const p = v.play();
-    if (p && p.catch) p.catch(() => {});
-  });
+  scope.querySelectorAll('.video-tile:not(.expand-source):not(.expanded-video) video').forEach(v => briefPlay(v));
 }
+/* nudges a paused, muted preview video to actually paint a frame —
+   playing (even briefly) reliably renders in every browser, unlike
+   seeking a fully-paused element, which some browsers leave blank.
+   Never touches .expand-source (the mini tile behind an open expand
+   view) or .expanded-video (the actual enlarged, playing video) —
+   those are excluded so this never interrupts something you clicked
+   into and are actually watching. */
+function briefPlay(v){
+  v.muted = true;
+  const tile = v.closest('.video-tile');
+  const p = v.play();
+  if (p && p.then){
+    p.then(() => {
+      setTimeout(() => {
+        if (tile && !tile.classList.contains('expand-source') && !tile.classList.contains('expanded-video')) v.pause();
+      }, 260);
+    }).catch(() => {});
+  }
+}
+/* slideshow effect: every 2s, jump each idle preview forward and hold
+   that still frame — reads as a handful of stills rather than a
+   smoothly playing video, with no sound either way */
+setInterval(() => {
+  document.querySelectorAll('.video-tile:not(.expand-source):not(.expanded-video) video').forEach(v => {
+    if (!v.duration || isNaN(v.duration)) return;
+    let t = (v.currentTime || 0) + 4;
+    if (t >= v.duration) t = 0;
+    v.currentTime = t;
+    briefPlay(v);
+  });
+}, 2000);
 render();
 
 function updateField(pIdx, field, value){
   posts[pIdx][field] = value;
   saveDrafts();
+}
+/* contenteditable elements handle Enter inconsistently (and a <p> can't
+   contain the line-break markup some browsers try to insert at all) —
+   this makes both Enter and Shift+Enter reliably insert a simple line
+   break instead of doing nothing or splitting into a new block. */
+function handleEditableKeydown(e){
+  if (e.key === 'Enter'){
+    e.preventDefault();
+    document.execCommand('insertLineBreak');
+  }
 }
 function editEntryColor(pIdx){
   const current = posts[pIdx].color || '#15111e';
@@ -998,6 +1206,34 @@ function deleteImage(pIdx, iIdx){
   saveDrafts();
   render();
 }
+function addAudioToPost(pIdx){
+  showModal(`
+    <h3>background audio</h3>
+    <p class="note">plays while this entry is expanded, with a volume slider — replaces any audio already on this entry.</p>
+    <input type="file" id="audioFile" accept="audio/*">
+    <div class="err" id="audioErr"></div>
+    <div class="row">
+      <button onclick="hideModal()">cancel</button>
+      <button class="primary" id="audioAddYes">add</button>
+    </div>
+  `);
+  document.getElementById('audioAddYes').onclick = () => {
+    const f = document.getElementById('audioFile').files[0];
+    if (!f){
+      document.getElementById('audioErr').textContent = 'choose a file first.';
+      return;
+    }
+    hideModal();
+    posts[pIdx].audio = { file: f, previewUrl: URL.createObjectURL(f), name: f.name };
+    saveDrafts();
+    render();
+  };
+}
+function removeAudioFromPost(pIdx){
+  delete posts[pIdx].audio;
+  saveDrafts();
+  render();
+}
 
 /* ---------- pending media staging for the new-entry form ---------- */
 let pendingMedia = [];
@@ -1029,24 +1265,48 @@ function removePendingMedia(i){
   renderPendingMedia();
 }
 
+let pendingAudio = null;
+document.getElementById('addAudioBtn').addEventListener('click', () => {
+  document.getElementById('audioPicker').click();
+});
+document.getElementById('audioPicker').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  pendingAudio = { file: f, previewUrl: URL.createObjectURL(f), name: f.name };
+  renderPendingAudio();
+});
+function renderPendingAudio(){
+  const box = document.getElementById('pendingAudioBox');
+  if (!pendingAudio){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.style.display = 'flex';
+  box.innerHTML = `<span>♪ ${pendingAudio.name}</span><button class="x-btn" onclick="removePendingAudio()">${xIconSVG(10)}</button>`;
+}
+function removePendingAudio(){
+  pendingAudio = null;
+  renderPendingAudio();
+}
+
 document.getElementById('addEntryBtn').addEventListener('click', () => {
   const title = document.getElementById('newTitle').value.trim();
   const text = document.getElementById('newText').value.trim();
   const color = document.getElementById('newColor').value;
-  if (!title && !text && !pendingMedia.length){
-    showModal(`<h3>hold on</h3><p class="note">add a title, some text, or at least one photo/video first.</p><div class="row"><button class="primary" onclick="hideModal()">ok</button></div>`);
+  if (!title && !text && !pendingMedia.length && !pendingAudio){
+    showModal(`<h3>hold on</h3><p class="note">add a title, some text, or at least one photo/video/audio first.</p><div class="row"><button class="primary" onclick="hideModal()">ok</button></div>`);
     return;
   }
   const now = new Date();
   const date = now.toLocaleDateString('en-US', { month:'2-digit', day:'2-digit', year:'numeric' }).replace(/\//g,'.');
   const time = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:true }).toLowerCase();
-  posts.unshift({ date, time, title, text, images: pendingMedia, color });
+  posts.unshift({ date, time, title, text, images: pendingMedia, audio: pendingAudio, color });
   saveDrafts();
   render();
   document.getElementById('newTitle').value = '';
   document.getElementById('newText').value = '';
   pendingMedia = [];
   renderPendingMedia();
+  pendingAudio = null;
+  renderPendingAudio();
   document.getElementById('newColor').value = '#15111e';
   document.getElementById('colorHex').textContent = '#15111e';
 });
@@ -1075,15 +1335,15 @@ function saveGhConfig(cfg){
 }
 
 function openGhSettings(){
-  const cfg = getGhConfig() || { owner:'', repo:'', path:'index.html', branch:'main', token:'' };
+  const cfg = getGhConfig() || { owner:'', repo:'', path:'index.html', branch:'main', relayUrl:'' };
   showModal(`
     <h3>github settings</h3>
-    <p class="note">from the repo you created: your username, the repo name, the file path (usually index.html), and a fine-grained token scoped to just that repo with contents read/write.</p>
+    <p class="note">your username, the repo name, the file path (usually index.html), and the auth relay URL from your Cloudflare Worker setup.</p>
     <input type="text" id="ghOwner" placeholder="github username" value="${cfg.owner}">
     <input type="text" id="ghRepo" placeholder="repo name" value="${cfg.repo}">
     <input type="text" id="ghPath" placeholder="file path" value="${cfg.path}">
     <input type="text" id="ghBranch" placeholder="branch" value="${cfg.branch}">
-    <input type="password" id="ghToken" placeholder="personal access token" value="${cfg.token}">
+    <input type="text" id="ghRelay" placeholder="auth relay URL (https://...workers.dev)" value="${cfg.relayUrl || ''}">
     <div class="err" id="ghErr"></div>
     <div class="row">
       <button onclick="hideModal()">cancel</button>
@@ -1095,16 +1355,57 @@ function openGhSettings(){
     const repo = document.getElementById('ghRepo').value.trim();
     const path = document.getElementById('ghPath').value.trim() || 'index.html';
     const branch = document.getElementById('ghBranch').value.trim() || 'main';
-    const token = document.getElementById('ghToken').value.trim();
-    if (!owner || !repo || !token){
-      document.getElementById('ghErr').textContent = 'username, repo, and token are required.';
+    const relayUrl = document.getElementById('ghRelay').value.trim().replace(/\/$/, '');
+    if (!owner || !repo || !relayUrl){
+      document.getElementById('ghErr').textContent = 'username, repo, and relay URL are required.';
       return;
     }
-    saveGhConfig({ owner, repo, path, branch, token });
+    saveGhConfig({ owner, repo, path, branch, relayUrl });
     hideModal();
   };
 }
 document.getElementById('ghSettingsBtn').addEventListener('click', openGhSettings);
+
+function ghToken(){
+  return localStorage.getItem('ghUserToken') || '';
+}
+async function refreshGhToken(cfg){
+  const refreshToken = localStorage.getItem('ghRefreshToken');
+  if (!refreshToken || !cfg || !cfg.relayUrl) return false;
+  try{
+    const res = await fetch(`${cfg.relayUrl}/access_token`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        client_id: GH_CLIENT_ID,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken
+      })
+    });
+    const data = await res.json();
+    if (data.access_token){
+      localStorage.setItem('ghUserToken', data.access_token);
+      if (data.refresh_token) localStorage.setItem('ghRefreshToken', data.refresh_token);
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+/* wraps a GitHub API call, retrying once with a refreshed token if the
+   current one turns out to be expired (a 401) */
+async function githubFetch(url, options, cfg){
+  options = options || {};
+  options.headers = Object.assign({}, options.headers, { 'Authorization': `Bearer ${ghToken()}` });
+  let res = await fetch(url, options);
+  if (res.status === 401){
+    const refreshed = await refreshGhToken(cfg);
+    if (refreshed){
+      options.headers['Authorization'] = `Bearer ${ghToken()}`;
+      res = await fetch(url, options);
+    }
+  }
+  return res;
+}
 
 async function uploadMediaFile(file, cfg){
   const dataUrl = await readFileAsDataURL(file);
@@ -1112,10 +1413,9 @@ async function uploadMediaFile(file, cfg){
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_') || 'file';
   const path = `media/${Date.now()}-${safeName}`;
   const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
-  const res = await fetch(apiUrl, {
+  const res = await githubFetch(apiUrl, {
     method:'PUT',
     headers:{
-      'Authorization': `Bearer ${cfg.token}`,
       'Accept':'application/vnd.github+json',
       'Content-Type':'application/json'
     },
@@ -1124,7 +1424,7 @@ async function uploadMediaFile(file, cfg){
       content: base64,
       branch: cfg.branch
     })
-  });
+  }, cfg);
   if (!res.ok){
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `media upload failed (${res.status}) for ${file.name}`);
@@ -1135,6 +1435,7 @@ async function uploadMediaFile(file, cfg){
 async function publishLive(){
   const cfg = getGhConfig();
   if (!cfg){ openGhSettings(); return; }
+  if (!ghToken()){ startGithubLogin(); return; }
   const btn = document.getElementById('publishLiveBtn');
   const originalLabel = btn.textContent;
   btn.disabled = true;
@@ -1142,7 +1443,10 @@ async function publishLive(){
     // upload any media that's still a raw local file, one at a time,
     // and swap it for the real path GitHub gives back
     const pending = [];
-    posts.forEach(p => (p.images || []).forEach(item => { if (item.file) pending.push(item); }));
+    posts.forEach(p => {
+      (p.images || []).forEach(item => { if (item.file) pending.push(item); });
+      if (p.audio && p.audio.file) pending.push(p.audio);
+    });
     for (let i = 0; i < pending.length; i++){
       btn.textContent = `uploading media ${i + 1}/${pending.length}…`;
       const item = pending[i];
@@ -1155,10 +1459,10 @@ async function publishLive(){
 
     btn.textContent = 'publishing…';
     const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.path}?ref=${cfg.branch}`;
-    const getRes = await fetch(apiUrl, {
-      headers:{ 'Authorization': `Bearer ${cfg.token}`, 'Accept':'application/vnd.github+json' }
-    });
-    if (!getRes.ok) throw new Error(`couldn't read the file (${getRes.status}). check the repo/path/token in settings.`);
+    const getRes = await githubFetch(apiUrl, {
+      headers:{ 'Accept':'application/vnd.github+json' }
+    }, cfg);
+    if (!getRes.ok) throw new Error(`couldn't read the file (${getRes.status}). check the repo/path in settings, and that you're signed in.`);
     const getData = await getRes.json();
 
     // GitHub only inlines base64 content for files under ~1MB. This file
@@ -1175,20 +1479,32 @@ async function publishLive(){
       throw new Error('GitHub did not return the file content or a download link.');
     }
 
-    const startMarker = '/* DEFAULT_POSTS_START */';
-    const endMarker = '/* DEFAULT_POSTS_END */';
-    const startIdx = currentText.indexOf(startMarker);
-    const endIdx = currentText.indexOf(endMarker);
-    if (startIdx === -1 || endIdx === -1){
-      throw new Error('could not find the DEFAULT_POSTS markers in the live file — make sure the uploaded file matches this one.');
+    function patchBlock(text, startMarker, endMarker, newInner){
+      const startIdx = text.indexOf(startMarker);
+      const endIdx = text.indexOf(endMarker);
+      if (startIdx === -1 || endIdx === -1){
+        throw new Error(`could not find the ${startMarker} markers in the live file — make sure the uploaded file matches this one.`);
+      }
+      const newBlock = `${startMarker}\n${newInner}\n${endMarker}`;
+      return text.slice(0, startIdx) + newBlock + text.slice(endIdx + endMarker.length);
     }
-    const newBlock = `${startMarker}\nconst defaultPosts = ${JSON.stringify(posts, null, 2)};\n${endMarker}`;
-    const newText = currentText.slice(0, startIdx) + newBlock + currentText.slice(endIdx + endMarker.length);
 
-    const putRes = await fetch(apiUrl, {
+    let newText = patchBlock(
+      currentText,
+      '/* DEFAULT_POSTS_START */',
+      '/* DEFAULT_POSTS_END */',
+      `const defaultPosts = ${JSON.stringify(posts, null, 2)};`
+    );
+    newText = patchBlock(
+      newText,
+      '/* DEFAULT_THEME_START */',
+      '/* DEFAULT_THEME_END */',
+      `const defaultTheme = ${JSON.stringify(theme, null, 2)};`
+    );
+
+    const putRes = await githubFetch(apiUrl, {
       method:'PUT',
       headers:{
-        'Authorization': `Bearer ${cfg.token}`,
         'Accept':'application/vnd.github+json',
         'Content-Type':'application/json'
       },
@@ -1198,7 +1514,7 @@ async function publishLive(){
         sha: getData.sha,
         branch: cfg.branch
       })
-    });
+    }, cfg);
     if (!putRes.ok){
       const errBody = await putRes.json().catch(() => ({}));
       throw new Error(errBody.message || `push failed (${putRes.status}).`);
@@ -1250,11 +1566,14 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   };
 });
 
-/* ---------- passcode gate ---------- */
-async function sha256(str){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
+/* ---------- real GitHub login (replaces the old passcode gate) ----------
+   Device flow: GitHub shows the person a code, they approve it on
+   github.com itself, and only THEN does this page get a real token —
+   there's no local flag or hash for anyone to fake from dev tools. The
+   Cloudflare Worker (relayUrl) exists purely to get around GitHub
+   blocking browsers from calling its OAuth endpoints directly; it holds
+   no secrets of its own. */
+const GH_CLIENT_ID = 'Iv23licjm9G9tcqr6PUW';
 
 function showModal(inner){
   document.getElementById('modalBox').innerHTML = inner;
@@ -1264,64 +1583,105 @@ function hideModal(){
   document.getElementById('modalOverlay').style.display = 'none';
 }
 
-function promptSetPasscode(){
-  showModal(`
-    <h3>set a passcode</h3>
-    <p class="note">no one's set one on this browser yet. this only guards the edit tools — pick anything memorable.</p>
-    <input type="password" id="pc1" placeholder="new passcode">
-    <input type="password" id="pc2" placeholder="confirm passcode">
-    <div class="err" id="pcErr"></div>
-    <div class="row">
-      <button onclick="hideModal()">cancel</button>
-      <button class="primary" onclick="confirmSetPasscode()">save</button>
-    </div>
-  `);
-  document.getElementById('pc1').focus();
-}
-async function confirmSetPasscode(){
-  const a = document.getElementById('pc1').value;
-  const b = document.getElementById('pc2').value;
-  if (!a || a !== b){
-    document.getElementById('pcErr').textContent = "passcodes don't match.";
+let loginPollTimer = null;
+async function startGithubLogin(){
+  const cfg = getGhConfig();
+  if (!cfg || !cfg.relayUrl){
+    showModal(`
+      <h3>one more thing</h3>
+      <p class="note">set the "auth relay URL" in github settings first — that's the Cloudflare Worker address from setup.</p>
+      <div class="row"><button class="primary" onclick="hideModal(); openGhSettings();">go to settings</button></div>
+    `);
     return;
   }
-  localStorage.setItem('ownerHash', await sha256(a));
+  try{
+    const codeRes = await fetch(`${cfg.relayUrl}/device/code`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ client_id: GH_CLIENT_ID })
+    });
+    const codeData = await codeRes.json();
+    if (!codeData.device_code) throw new Error(codeData.error_description || 'could not start login.');
+
+    showModal(`
+      <h3>sign in with github</h3>
+      <p class="note">go to <a href="${codeData.verification_uri}" target="_blank" rel="noopener" style="color:var(--sage);">${codeData.verification_uri}</a> and enter this code:</p>
+      <div style="font-family:'Space Mono',monospace;font-size:22px;letter-spacing:0.12em;text-align:center;padding:14px;border:1px solid var(--hairline);border-radius:4px;margin-bottom:12px;color:var(--gold);">${codeData.user_code}</div>
+      <p class="note" id="loginStatus">waiting for you to approve…</p>
+      <div class="row"><button onclick="hideModal(); clearTimeout(loginPollTimer);">cancel</button></div>
+    `);
+    pollForToken(cfg.relayUrl, codeData.device_code, codeData.interval || 5);
+  } catch(err){
+    showModal(`<h3>login failed</h3><p class="note">${(err.message || 'something went wrong').replace(/</g,'&lt;')}</p><div class="row"><button class="primary" onclick="hideModal()">ok</button></div>`);
+  }
+}
+
+function pollForToken(relayUrl, deviceCode, interval){
+  clearTimeout(loginPollTimer);
+  loginPollTimer = setTimeout(async () => {
+    try{
+      const res = await fetch(`${relayUrl}/access_token`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          client_id: GH_CLIENT_ID,
+          device_code: deviceCode,
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code'
+        })
+      });
+      const data = await res.json();
+      const statusEl = document.getElementById('loginStatus');
+      if (data.access_token){
+        await finishGithubLogin(data);
+      } else if (data.error === 'authorization_pending'){
+        pollForToken(relayUrl, deviceCode, interval);
+      } else if (data.error === 'slow_down'){
+        pollForToken(relayUrl, deviceCode, data.interval || interval + 5);
+      } else if (data.error === 'expired_token'){
+        if (statusEl) statusEl.textContent = 'code expired — close this and try again.';
+      } else if (data.error === 'access_denied'){
+        if (statusEl) statusEl.textContent = 'login was denied.';
+      } else {
+        pollForToken(relayUrl, deviceCode, interval);
+      }
+    } catch(err){
+      pollForToken(relayUrl, deviceCode, interval);
+    }
+  }, interval * 1000);
+}
+
+async function finishGithubLogin(tokenData){
+  localStorage.setItem('ghUserToken', tokenData.access_token);
+  if (tokenData.refresh_token) localStorage.setItem('ghRefreshToken', tokenData.refresh_token);
+  const cfg = getGhConfig();
+  try{
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}`, {
+      headers:{ 'Authorization': `Bearer ${tokenData.access_token}`, 'Accept':'application/vnd.github+json' }
+    });
+    const data = await res.json();
+    if (!data.permissions || !data.permissions.push){
+      localStorage.removeItem('ghUserToken');
+      localStorage.removeItem('ghRefreshToken');
+      showModal(`
+        <h3>not authorized</h3>
+        <p class="note">signed in fine, but that github account doesn't have write access to ${cfg.owner}/${cfg.repo}, so it can't be the owner account for this site.</p>
+        <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
+      `);
+      return;
+    }
+  } catch(e){ /* network hiccup — proceed, later API calls will fail loudly if something's really wrong */ }
   hideModal();
   unlock();
 }
 
-function promptEnterPasscode(){
-  showModal(`
-    <h3>enter passcode</h3>
-    <input type="password" id="pcEnter" placeholder="passcode">
-    <div class="err" id="pcErr2"></div>
-    <div class="row">
-      <button onclick="hideModal()">cancel</button>
-      <button class="primary" onclick="confirmEnterPasscode()">unlock</button>
-    </div>
-  `);
-  const field = document.getElementById('pcEnter');
-  field.focus();
-  field.addEventListener('keydown', e => { if (e.key === 'Enter') confirmEnterPasscode(); });
-}
-/* One-time recovery — deliberately NOT wired to any visible button.
-   If you forget your passcode, open this page's browser console
-   (F12) and type resetPasscode() yourself, then set a new one. */
-function resetPasscode(){
-  localStorage.removeItem('ownerHash');
-  hideModal();
-  promptSetPasscode();
-  return 'passcode cleared — set a new one in the dialog that just opened.';
-}
-async function confirmEnterPasscode(){
-  const val = document.getElementById('pcEnter').value;
-  const hash = await sha256(val);
-  if (hash === localStorage.getItem('ownerHash')){
-    hideModal();
-    unlock();
-  } else {
-    document.getElementById('pcErr2').textContent = 'wrong passcode.';
-  }
+/* One-time recovery — deliberately NOT a public button. If a token gets
+   stuck/broken, open the browser console (F12) and type
+   forceGithubSignOut(), then sign in again normally. */
+function forceGithubSignOut(){
+  localStorage.removeItem('ghUserToken');
+  localStorage.removeItem('ghRefreshToken');
+  lock();
+  return 'signed out — click the lock icon to sign in again.';
 }
 
 function unlock(){
@@ -1344,8 +1704,8 @@ function togglePanel(){
 
 document.getElementById('ownerToggle').addEventListener('click', () => {
   if (ownerMode){ togglePanel(); return; }
-  if (localStorage.getItem('ownerHash')) promptEnterPasscode();
-  else promptSetPasscode();
+  if (localStorage.getItem('ghUserToken')) unlock();
+  else startGithubLogin();
 });
 document.getElementById('panelArrow').addEventListener('click', () => {
   document.getElementById('editPanel').classList.remove('open');

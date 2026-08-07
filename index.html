@@ -589,7 +589,7 @@
 
   .audio-volume{
     position:absolute;
-    left:14px; bottom:14px;
+    left:14px; top:14px;
     z-index:2;
     display:flex;
     align-items:center;
@@ -649,7 +649,10 @@
     background:var(--card-hi);
     border:1px solid var(--hairline);
     border-radius:5px;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
   }
+  .expand-card::-webkit-scrollbar{ display:none; }
 
   .expand-close{
     position:absolute;
@@ -764,18 +767,14 @@ const defaultPosts = [
     "date": "08.05.2026",
     "time": "8:11:04 pm",
     "title": "humanity x machinery",
-    "text": "i made this little photo, it involves two of my favorite artists\n\n sonicbrat, and james ivy\n\n there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that \n\ni wanted to make something of the same feeling so i thought i'd write about it\n\noh yeah this is my first post.. life is pretty rough right now and i'm going through a lot\n\ni made this so i could look back some years later and feel something about it \n\n (and maybe improve my grammar too)",
+    "text": "i made this little photo, it involves two of my favorite artists sonicbrat, and james ivy  there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that  i want to make something of the same feeling, so i thought i'd write about it  oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it  (and maybe improve my grammar too)",
     "images": [
       {
         "type": "image",
         "path": "media/1785978816196-humanity-x-machinery.png"
       }
     ],
-    "color": "#09090f",
-    "audio": {
-      "name": "SonicBrat - Two Moons.mp3",
-      "path": "media/1786063217946-SonicBrat_-_Two_Moons.mp3"
-    }
+    "color": "#09090f"
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -791,13 +790,13 @@ const defaultTheme = {
   "bg": "#06050a",
   "card": "#15111e",
   "cardHi": "#1c1628",
-  "rose": "#3d4256",
-  "lavender": "#fa676a",
+  "rose": "#4b527a",
+  "lavender": "#9a80e0",
   "sage": "#45a68d",
-  "gold": "#dda53c",
+  "gold": "#dba63e",
   "ink": "#e6dfda",
   "inkDim": "#8a7f96",
-  "hairline": "#111111"
+  "hairline": "#241c33"
 };
 /* DEFAULT_THEME_END */
 
@@ -1044,6 +1043,7 @@ function openExpand(pIdx){
 }
 function closeExpand(){
   document.getElementById('expandOverlay').classList.remove('open');
+  document.querySelectorAll('#expandOverlay video').forEach(v => v.pause());
   const audioEl = document.getElementById('expandAudio');
   if (audioEl) audioEl.pause();
   if (activeExpandTile){

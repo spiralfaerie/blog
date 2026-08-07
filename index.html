@@ -1361,9 +1361,22 @@ if (!/^https?:\/\//i.test(relayUrl)) {
       document.getElementById('ghErr').textContent = 'username, repo, and relay URL are required.';
       return;
     }
+    
     saveGhConfig({ owner, repo, path, branch, relayUrl });
     hideModal();
   };
+  function getGhConfig() {
+    const raw = localStorage.getItem('ghConfig');
+    if (!raw) return null;
+
+    const cfg = JSON.parse(raw);
+
+    if (cfg.relayUrl && !/^https?:\/\//i.test(cfg.relayUrl)) {
+        cfg.relayUrl = 'https://' + cfg.relayUrl;
+        localStorage.setItem('ghConfig', JSON.stringify(cfg));
+    }
+
+    return cfg;
 }
 document.getElementById('ghSettingsBtn').addEventListener('click', openGhSettings);
 

@@ -200,8 +200,6 @@
     color:rgba(233,227,218,0.55);
     text-transform:uppercase;
   }
-  .img-tile{ transition:filter 0.35s ease; filter:saturate(0.9); }
-  .img-tile:hover{ filter:saturate(1.15); }
 
   footer{
     position:relative;
@@ -733,8 +731,6 @@
   <div class="hint" id="publishHint">connect a GitHub repo once, then hit "publish live" to push changes straight to your site — no copying, no re-uploading.</div>
   <button class="export-btn" id="publishLiveBtn">publish live</button>
   <button class="reset-btn" id="ghSettingsBtn">github settings</button>
-  <div class="hint">or do it by hand: copy the JSON, paste it over the <code>posts</code> array in the file, re-upload.</div>
-  <button class="export-btn" id="exportBtn">copy posts as JSON</button>
   <button class="reset-btn" id="resetBtn">reset local drafts</button>
   <button class="reset-btn" id="lockBtn">exit edit mode</button>
 </div>
@@ -748,44 +744,25 @@
 <script>
 /* ============================================================
    DEFAULT POSTS
-   This is the array that ships live to every visitor. Either publish
-   via the button in the edit panel (if you've set up GitHub Pages),
-   or copy the JSON and paste it over this array by hand and re-upload.
-   Keep the START/END markers intact — the publish button uses them
-   to find and replace this block.
+   This is the array that ships live to every visitor — updated by
+   the "publish live" button in the edit panel (signed in via GitHub).
+   Keep the START/END markers intact — publish uses them to find and
+   replace this block.
 ============================================================ */
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.07.2026",
-    "time": "1:09:40 am",
-    "title": "12 years ago",
-    "text": "12 years ago i would have been 12 years old\n\nan unpainted canvas\n\nnow im all muddied and the colors are all ugly\n\nthe more colors there are in the mix, the harder it is to make change to what is presently there\n\ni want to become someone cool but i'm already so old and solidified and man im terrible",
-    "images": [
-      {
-        "type": "image",
-        "path": "media/1786083113851-12-years-ago.png"
-      }
-    ],
-    "audio": null,
-    "color": "#2e251b"
-  },
-  {
     "date": "08.05.2026",
     "time": "8:11:04 pm",
     "title": "humanity x machinery",
-    "text": "i made this little photo, it involves two of my favorite artists\n\n sonicbrat, and james ivy\n\n there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that \n\ni wanted to make something of the same feeling so i thought i'd write about it\n\noh yeah this is my first post.. life is pretty rough right now and i'm going through a lot\n\ni made this so i could look back some years later and feel something about it \n\n (and maybe improve my grammar too)",
+    "text": "i made this little photo, it involves two of my favorite artists sonicbrat, and james ivy  there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that  i want to make something of the same feeling, so i thought i'd write about it  oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it  (and maybe improve my grammar too)",
     "images": [
       {
         "type": "image",
         "path": "media/1785978816196-humanity-x-machinery.png"
       }
     ],
-    "color": "#09090f",
-    "audio": {
-      "name": "SonicBrat - Two Moons.mp3",
-      "path": "media/1786081359459-SonicBrat_-_Two_Moons.mp3"
-    }
+    "color": "#09090f"
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -801,13 +778,13 @@ const defaultTheme = {
   "bg": "#06050a",
   "card": "#15111e",
   "cardHi": "#1c1628",
-  "rose": "#3d4256",
-  "lavender": "#fa676a",
+  "rose": "#4b527a",
+  "lavender": "#9a80e0",
   "sage": "#45a68d",
-  "gold": "#dda53c",
+  "gold": "#dba63e",
   "ink": "#e6dfda",
-  "inkDim": "#a4a4a4",
-  "hairline": "#111111"
+  "inkDim": "#8a7f96",
+  "hairline": "#241c33"
 };
 /* DEFAULT_THEME_END */
 
@@ -1603,17 +1580,6 @@ async function publishLive(){
   }
 }
 document.getElementById('publishLiveBtn').addEventListener('click', publishLive);
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const json = JSON.stringify(posts, null, 2);
-  navigator.clipboard.writeText(`const defaultPosts = ${json};`).then(() => {
-    showModal(`
-      <h3>copied</h3>
-      <p class="note">paste this over the defaultPosts array in the file to publish for everyone.</p>
-      <div class="row"><button class="primary" onclick="hideModal()">ok</button></div>
-    `);
-  });
-});
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   showModal(`

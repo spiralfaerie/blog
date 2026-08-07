@@ -884,6 +884,16 @@ function saveDrafts(){
 function mediaSrc(item){
   return item.path || item.previewUrl || item.src || '';
 }
+/* one shared volume level for both video and audio in the expanded
+   view — persisted so it carries over between posts and browser
+   sessions, not reset back to full/0.7 every time */
+function getSavedVolume(){
+  const v = parseFloat(localStorage.getItem('preferredVolume'));
+  return isNaN(v) ? 0.7 : Math.min(1, Math.max(0, v));
+}
+function setSavedVolume(v){
+  localStorage.setItem('preferredVolume', v);
+}
 function pendingMediaCount(){
   return posts.reduce((n, p) => {
     const imgCount = (p.images || []).filter(i => i.file).length;
@@ -946,11 +956,11 @@ function renderMediaTile(item, postIdx, itemIdx, expanded){
       return `
         <div class="img-tile video-tile expanded-video" data-post="${postIdx}" data-img="${itemIdx}">
           <video id="expandVideo-${itemIdx}" class="tile-video" src="${resolvedSrc}" playsinline
-                 onloadedmetadata="this.currentTime=${startAt};"></video>
+                 onloadedmetadata="this.currentTime=${startAt}; this.volume=getSavedVolume();"></video>
           <div class="audio-volume" onclick="event.stopPropagation()">
             <span class="vol-icon">${volIconSVG(false, 13)}</span>
-            <input type="range" min="0" max="1" step="0.01" value="1"
-                   oninput="document.getElementById('expandVideo-${itemIdx}').volume=this.value">
+            <input type="range" min="0" max="1" step="0.01" value="${getSavedVolume()}"
+                   oninput="document.getElementById('expandVideo-${itemIdx}').volume=this.value; setSavedVolume(this.value);">
           </div>
           ${delBtn}
         </div>`;
@@ -1011,8 +1021,8 @@ function openExpand(pIdx){
         <audio id="expandAudio" src="${audioSrc}" loop></audio>
         <div class="audio-volume" onclick="event.stopPropagation()">
           <span class="vol-icon">${volIconSVG(false, 13)}</span>
-          <input type="range" min="0" max="1" step="0.01" value="0.7"
-                 oninput="document.getElementById('expandAudio').volume=this.value">
+          <input type="range" min="0" max="1" step="0.01" value="${getSavedVolume()}"
+                 oninput="document.getElementById('expandAudio').volume=this.value; setSavedVolume(this.value);">
         </div>` : ''}
     </div>`;
   document.getElementById('expandOverlay').classList.add('open');
@@ -1022,12 +1032,13 @@ function openExpand(pIdx){
   // policy allows it
   document.querySelectorAll('#expandOverlay .expanded-video video').forEach(v => {
     v.muted = false;
+    v.volume = getSavedVolume();
     const p = v.play();
     if (p && p.catch) p.catch(() => { v.muted = true; v.play().catch(() => {}); });
   });
   const audioEl = document.getElementById('expandAudio');
   if (audioEl){
-    audioEl.volume = 0.7;
+    audioEl.volume = getSavedVolume();
     const p = audioEl.play();
     if (p && p.catch) p.catch(() => {});
   }

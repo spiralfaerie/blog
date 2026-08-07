@@ -1327,50 +1327,17 @@ function b64ToUtf8(str){
   return decodeURIComponent(escape(atob(str)));
 }
 
-function saveGhConfig(cfg){
-  localStorage.setItem('ghConfig', JSON.stringify(cfg));
+function saveGhConfig(cfg) {
+    localStorage.setItem('ghConfig', JSON.stringify(cfg));
 }
 
-function openGhSettings(){
-  const cfg = getGhConfig() || { owner:'', repo:'', path:'index.html', branch:'main', relayUrl:'' };
-  showModal(`
-    <h3>github settings</h3>
-    <p class="note">your username, the repo name, the file path (usually index.html), and the auth relay URL from your Cloudflare Worker setup.</p>
-    <input type="text" id="ghOwner" placeholder="github username" value="${cfg.owner}">
-    <input type="text" id="ghRepo" placeholder="repo name" value="${cfg.repo}">
-    <input type="text" id="ghPath" placeholder="file path" value="${cfg.path}">
-    <input type="text" id="ghBranch" placeholder="branch" value="${cfg.branch}">
-    <input type="text" id="ghRelay" placeholder="auth relay URL (https://...workers.dev)" value="${cfg.relayUrl || ''}">
-    <div class="err" id="ghErr"></div>
-    <div class="row">
-      <button onclick="hideModal()">cancel</button>
-      <button class="primary" id="ghSaveYes">save</button>
-    </div>
-  `);
-  document.getElementById('ghSaveYes').onclick = () => {
-    const owner = document.getElementById('ghOwner').value.trim();
-    const repo = document.getElementById('ghRepo').value.trim();
-    const path = document.getElementById('ghPath').value.trim() || 'index.html';
-    const branch = document.getElementById('ghBranch').value.trim() || 'main';
-let relayUrl = document.getElementById('ghRelay').value.trim().replace(/\/$/, '');
-
-if (!/^https?:\/\//i.test(relayUrl)) {
-    relayUrl = 'https://' + relayUrl;
-}
-    if (!owner || !repo || !relayUrl){
-      document.getElementById('ghErr').textContent = 'username, repo, and relay URL are required.';
-      return;
-    }
-    
-    saveGhConfig({ owner, repo, path, branch, relayUrl });
-    hideModal();
-  };
-  function getGhConfig() {
+function getGhConfig() {
     const raw = localStorage.getItem('ghConfig');
     if (!raw) return null;
 
     const cfg = JSON.parse(raw);
 
+    // Repair old relay URLs that don't include https://
     if (cfg.relayUrl && !/^https?:\/\//i.test(cfg.relayUrl)) {
         cfg.relayUrl = 'https://' + cfg.relayUrl;
         localStorage.setItem('ghConfig', JSON.stringify(cfg));
@@ -1378,7 +1345,57 @@ if (!/^https?:\/\//i.test(relayUrl)) {
 
     return cfg;
 }
+
+function openGhSettings() {
+    const cfg = getGhConfig() || {
+        owner: '',
+        repo: '',
+        path: 'index.html',
+        branch: 'main',
+        relayUrl: ''
+    };
+
+    showModal(`
+        <h3>github settings</h3>
+        <p class="note">your username, the repo name, the file path (usually index.html), and the auth relay URL from your Cloudflare Worker setup.</p>
+
+        <input type="text" id="ghOwner" placeholder="github username" value="${cfg.owner}">
+        <input type="text" id="ghRepo" placeholder="repo name" value="${cfg.repo}">
+        <input type="text" id="ghPath" placeholder="file path" value="${cfg.path}">
+        <input type="text" id="ghBranch" placeholder="branch" value="${cfg.branch}">
+        <input type="text" id="ghRelay" placeholder="auth relay URL (https://...workers.dev)" value="${cfg.relayUrl || ''}">
+
+        <div class="err" id="ghErr"></div>
+
+        <div class="row">
+            <button onclick="hideModal()">cancel</button>
+            <button class="primary" id="ghSaveYes">save</button>
+        </div>
+    `);
+
+    document.getElementById('ghSaveYes').onclick = () => {
+        const owner = document.getElementById('ghOwner').value.trim();
+        const repo = document.getElementById('ghRepo').value.trim();
+        const path = document.getElementById('ghPath').value.trim() || 'index.html';
+        const branch = document.getElementById('ghBranch').value.trim() || 'main';
+
+        let relayUrl = document.getElementById('ghRelay').value.trim().replace(/\/$/, '');
+
+        if (!/^https?:\/\//i.test(relayUrl)) {
+            relayUrl = 'https://' + relayUrl;
+        }
+
+        if (!owner || !repo || !relayUrl) {
+            document.getElementById('ghErr').textContent =
+                'username, repo, and relay URL are required.';
+            return;
+        }
+
+        saveGhConfig({ owner, repo, path, branch, relayUrl });
+        hideModal();
+    };
 }
+
 document.getElementById('ghSettingsBtn').addEventListener('click', openGhSettings);
 
 function ghToken(){

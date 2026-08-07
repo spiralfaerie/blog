@@ -515,13 +515,6 @@
   .video-tile{ cursor:pointer; }
   .tile-video{ width:100%; height:100%; object-fit:cover; display:block; }
 
-  .vol-btn{
-    position:absolute; top:8px; left:8px;
-    width:24px; height:24px;
-    opacity:0.85;
-  }
-  .expanded-video:hover .vol-btn{ opacity:1; }
-
   /* ---------- pending media (new-entry staging) ---------- */
   .pending-media{
     display:flex;
@@ -764,35 +757,17 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.07.2026",
-    "time": "12:28:16 am",
-    "title": "",
-    "text": "",
-    "images": [
-      {
-        "type": "video",
-        "path": "media/1786080499002-Video_Project_2_2__1_.mp4"
-      }
-    ],
-    "audio": null,
-    "color": "#15111e"
-  },
-  {
     "date": "08.05.2026",
     "time": "8:11:04 pm",
     "title": "humanity x machinery",
-    "text": "i made this little photo, it involves two of my favorite artists\n\n sonicbrat, and james ivy\n\n there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that \n\ni wanted to make something of the same feeling so i thought i'd write about it\n\noh yeah this is my first post.. life is pretty rough right now and i'm going through a lot\n\ni made this so i could look back some years later and feel something about it \n\n (and maybe improve my grammar too)",
+    "text": "i made this little photo, it involves two of my favorite artists sonicbrat, and james ivy  there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that  i want to make something of the same feeling, so i thought i'd write about it  oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it  (and maybe improve my grammar too)",
     "images": [
       {
         "type": "image",
         "path": "media/1785978816196-humanity-x-machinery.png"
       }
     ],
-    "color": "#09090f",
-    "audio": {
-      "name": "SonicBrat - Two Moons.mp3",
-      "path": "media/1786063217946-SonicBrat_-_Two_Moons.mp3"
-    }
+    "color": "#09090f"
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -808,13 +783,13 @@ const defaultTheme = {
   "bg": "#06050a",
   "card": "#15111e",
   "cardHi": "#1c1628",
-  "rose": "#3d4256",
-  "lavender": "#fa676a",
+  "rose": "#4b527a",
+  "lavender": "#9a80e0",
   "sage": "#45a68d",
-  "gold": "#dda53c",
+  "gold": "#dba63e",
   "ink": "#e6dfda",
   "inkDim": "#8a7f96",
-  "hairline": "#111111"
+  "hairline": "#241c33"
 };
 /* DEFAULT_THEME_END */
 
@@ -970,9 +945,13 @@ function renderMediaTile(item, postIdx, itemIdx, expanded){
       const startAt = item.lastTime || 0;
       return `
         <div class="img-tile video-tile expanded-video" data-post="${postIdx}" data-img="${itemIdx}">
-          <video class="tile-video" src="${resolvedSrc}" playsinline
+          <video id="expandVideo-${itemIdx}" class="tile-video" src="${resolvedSrc}" playsinline
                  onloadedmetadata="this.currentTime=${startAt};"></video>
-          <button class="vol-btn x-btn" onclick="event.stopPropagation(); toggleVolumeBtn(this)" title="sound">${volIconSVG(false, 12)}</button>
+          <div class="audio-volume" onclick="event.stopPropagation()">
+            <span class="vol-icon">${volIconSVG(false, 13)}</span>
+            <input type="range" min="0" max="1" step="0.01" value="1"
+                   oninput="document.getElementById('expandVideo-${itemIdx}').volume=this.value">
+          </div>
           ${delBtn}
         </div>`;
     }
@@ -1007,12 +986,6 @@ function handleVideoTileClick(tile, postIdx, itemIdx){
   video.muted = true;
   tile.classList.add('expand-source');
   activeExpandTile = tile;
-}
-function toggleVolumeBtn(btn){
-  const video = btn.closest('.video-tile').querySelector('video');
-  video.muted = !video.muted;
-  if (!video.muted) video.play();
-  btn.innerHTML = volIconSVG(video.muted, 12);
 }
 
 function openExpand(pIdx){

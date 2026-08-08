@@ -634,9 +634,8 @@
 
   .expand-card{
     position:relative;
-    width:fit-content;
-    min-width:min(400px, 90vw);
-    max-width:min(90vw, 920px);
+    width:640px;
+    max-width:90vw;
     max-height:88vh;
     overflow-y:auto;
     overflow-x:hidden;
@@ -659,18 +658,22 @@
   .expand-images{ gap:2px; }
   .expand-images .img-tile{
     overflow:hidden;
-    max-width:90vw;
   }
+  /* exact width/height for single-image posts is set by JS (fitExpandCard)
+     to the image's real scaled size — deliberately not left to the
+     browser's own grid/text sizing math, which rendered inconsistently
+     across browsers */
   .expand-images .img-tile img,
-  .expand-images .img-tile video,
+  .expand-images .img-tile video{
+    display:block;
+    margin:0 auto;
+  }
   .expand-images .img-tile .ph{
-    width:auto;
-    height:65vh;
-    max-width:90vw;
-    object-fit:contain;
+    width:100%;
+    aspect-ratio:var(--ar, 4/5);
     display:block;
   }
-  .expand-body{ padding:26px 30px 30px; max-width:min(90vw, 920px); }
+  .expand-body{ padding:26px 30px 30px; width:100%; box-sizing:border-box; }
   .expand-body .entry-title{ font-size:32px; margin-bottom:16px; }
   .expand-body .entry-text{ font-size:15.5px; line-height:1.75; color:var(--ink); }
 </style>
@@ -764,58 +767,17 @@
 /* DEFAULT_POSTS_START */
 const defaultPosts = [
   {
-    "date": "08.07.2026",
-    "time": "3:27:18 pm",
-    "title": "any day",
-    "text": "i was singing gibberish over a stem split\n\nit comes from a 2023 snippet of james ivy playing the guitar and singing\n\nthe words that automatically spew out of my mouth might have some meaning even if i wasn't trying to say it",
-    "images": [
-      {
-        "type": "image",
-        "label": "",
-        "path": "media/1786134798250-any-day.png"
-      }
-    ],
-    "audio": {
-      "name": "any day.wav",
-      "path": "media/1786134799970-any_day.wav"
-    },
-    "color": "#11161e",
-    "outlineColor": "#4e181f"
-  },
-  {
-    "date": "08.07.2026",
-    "time": "1:09:40 am",
-    "title": "twelve years ago",
-    "text": "twelve years ago i would have been twelve years old\n\nan unpainted canvas\n\nnow im all muddied and the colors are all ugly\n\nthe more colors there are in the mix, the harder it is to make change to what is presently there\n\ni want to become someone cool but i'm already so old and solidified and man im terrible",
-    "images": [
-      {
-        "type": "image",
-        "label": "",
-        "path": "media/1786140306064-12-years-ago.png"
-      }
-    ],
-    "audio": {
-      "name": "v12044gd0000cijj0p3c77u7ohdh85cg (mp3cut (mp3cut.net).mp3",
-      "path": "media/1786121006955-v12044gd0000cijj0p3c77u7ohdh85cg__mp3cut__mp3cut.net_.mp3"
-    },
-    "color": "#2e251b"
-  },
-  {
     "date": "08.05.2026",
     "time": "8:11:04 pm",
     "title": "humanity x machinery",
-    "text": "i made this little photo, it involves two of my favorite artists\n\n sonicbrat, and james ivy\n\n there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments.... it feels like a crossroads between humanity and machinery and i really love that \n\ni wanted to make something of the same feeling so i thought i'd write about it\n\noh yeah this is my first post.. life is pretty rough right now and i'm going through a lot\n\ni made this so i could look back some years later and feel something about it \n\n (and maybe improve my grammar too)",
+    "text": "i made this little photo, it involves two of my favorite artists sonicbrat, and james ivy  there's something i really like about what they do where they turn these electronic noises into these ambient / supporting sounds whilst using human instruments, it feels like a crossroads between humanity and machinery and i really love that  i want to make something of the same feeling, so i thought i'd write about it  oh yeah this is my first post. life is pretty rough right now and i'm going through a lot but i made this so i could look back some years later and feel something about it  (and maybe improve my grammar too)",
     "images": [
       {
         "type": "image",
         "path": "media/1785978816196-humanity-x-machinery.png"
       }
     ],
-    "color": "#09090f",
-    "audio": {
-      "name": "SonicBrat - Two Moons.mp3",
-      "path": "media/1786081359459-SonicBrat_-_Two_Moons.mp3"
-    }
+    "color": "#09090f"
   }
 ];
 /* DEFAULT_POSTS_END */
@@ -830,14 +792,14 @@ const defaultPosts = [
 const defaultTheme = {
   "bg": "#06050a",
   "card": "#15111e",
-  "cardHi": "#0d0b11",
-  "rose": "#2c3741",
-  "lavender": "#fa676a",
+  "cardHi": "#1c1628",
+  "rose": "#4b527a",
+  "lavender": "#9a80e0",
   "sage": "#45a68d",
-  "gold": "#dda53c",
+  "gold": "#dba63e",
   "ink": "#e6dfda",
-  "inkDim": "#a4a4a4",
-  "hairline": "#111111"
+  "inkDim": "#8a7f96",
+  "hairline": "#241c33"
 };
 /* DEFAULT_THEME_END */
 
@@ -1084,7 +1046,7 @@ function openExpand(pIdx){
     <div class="expand-card" style="${post.color ? `background:${post.color};` : ''}" onclick="event.stopPropagation()">
       <button class="expand-close x-btn" onclick="closeExpand()" title="close">${xIconSVG(16)}</button>
       ${images.length ? `
-        <div class="grouped-images expand-images" style="grid-template-columns:repeat(${cols}, max-content);">
+        <div class="grouped-images expand-images" style="grid-template-columns:repeat(${cols}, 1fr);">
           ${mediaHtml}
         </div>` : ''}
       ${(post.title || post.text) ? `
@@ -1130,11 +1092,45 @@ function closeExpand(){
   }
 }
 
-/* media is capped via CSS (max-height + object-fit:contain), so no
-   JS scaling is needed here anymore — this used to shrink the whole
-   card including the text, which wasn't right. Kept as a no-op so
-   the onload="fitExpandCard()" hooks on images don't error out. */
-function fitExpandCard(){}
+/* Sizes the expand card to exactly match a single image/video's real
+   proportions, computed in JS from its actual pixel dimensions —
+   deliberately not left to the browser's own grid/fit-content sizing,
+   which rendered inconsistently across browsers and got pulled wider
+   by the text below it. Only applies when there's exactly one media
+   item; multi-image posts keep the simpler fixed-grid layout. */
+function fitExpandCard(){
+  const overlay = document.getElementById('expandOverlay');
+  if (!overlay || !overlay.classList.contains('open')) return;
+  const card = overlay.querySelector('.expand-card');
+  const tile = overlay.querySelector('.expand-images');
+  if (!card) return;
+  if (!tile){ card.style.width = '640px'; return; }
+  const tiles = tile.querySelectorAll('.img-tile');
+  if (tiles.length !== 1){ card.style.width = '640px'; return; }
+  const el = tiles[0].querySelector('img, video');
+  if (!el){ card.style.width = '640px'; return; }
+
+  const maxW = Math.min(window.innerWidth * 0.9, 920);
+  const maxH = window.innerHeight * 0.65;
+
+  function applySize(nw, nh){
+    if (!nw || !nh) return;
+    const scale = Math.min(1, maxW / nw, maxH / nh);
+    const w = Math.max(300, Math.round(nw * scale));
+    const h = Math.round(nh * scale);
+    el.style.width = w + 'px';
+    el.style.height = h + 'px';
+    card.style.width = w + 'px';
+  }
+
+  if (el.tagName === 'IMG'){
+    if (el.complete && el.naturalWidth) applySize(el.naturalWidth, el.naturalHeight);
+    else el.addEventListener('load', () => applySize(el.naturalWidth, el.naturalHeight), { once:true });
+  } else if (el.tagName === 'VIDEO'){
+    if (el.readyState >= 1) applySize(el.videoWidth, el.videoHeight);
+    else el.addEventListener('loadedmetadata', () => applySize(el.videoWidth, el.videoHeight), { once:true });
+  }
+}
 window.addEventListener('resize', fitExpandCard);
 
 function render(){
